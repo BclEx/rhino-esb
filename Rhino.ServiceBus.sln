@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Starbucks", "Starbucks", "{64DC50EF-F634-4E75-8375-ACC6D42E2DB4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rhino.ServiceBus", "Rhino.ServiceBus\Rhino.ServiceBus.csproj", "{1B21C8A5-5E0E-412B-A7F4-9F28B4427F21}"
@@ -26,6 +26,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rhino.ServiceBus.Spring", "Rhino.ServiceBus.Spring\Rhino.ServiceBus.Spring.csproj", "{E18B8442-40AF-F3A1-9FB0-F1C5FC994CEA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rhino.ServiceBus.RhinoQueues", "Rhino.ServiceBus.RhinoQueues\Rhino.ServiceBus.RhinoQueues.csproj", "{9748B2BF-41EA-487A-944C-A4ABEFFA2087}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rhino.ServiceBus.RhinoFiles", "Rhino.ServiceBus.RhinoFiles\Rhino.ServiceBus.RhinoFiles.csproj", "{AB208E96-E225-44A0-AC02-6950AB63F7A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -149,6 +151,18 @@ Global
 		{9748B2BF-41EA-487A-944C-A4ABEFFA2087}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9748B2BF-41EA-487A-944C-A4ABEFFA2087}.Release|x64.ActiveCfg = Release|x64
 		{9748B2BF-41EA-487A-944C-A4ABEFFA2087}.Release|x86.ActiveCfg = Release|x86
+		{AB208E96-E225-44A0-AC02-6950AB63F7A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB208E96-E225-44A0-AC02-6950AB63F7A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB208E96-E225-44A0-AC02-6950AB63F7A0}.Debug|x64.ActiveCfg = Debug|x64
+		{AB208E96-E225-44A0-AC02-6950AB63F7A0}.Debug|x64.Build.0 = Debug|x64
+		{AB208E96-E225-44A0-AC02-6950AB63F7A0}.Debug|x86.ActiveCfg = Debug|x86
+		{AB208E96-E225-44A0-AC02-6950AB63F7A0}.Debug|x86.Build.0 = Debug|x86
+		{AB208E96-E225-44A0-AC02-6950AB63F7A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB208E96-E225-44A0-AC02-6950AB63F7A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB208E96-E225-44A0-AC02-6950AB63F7A0}.Release|x64.ActiveCfg = Release|x64
+		{AB208E96-E225-44A0-AC02-6950AB63F7A0}.Release|x64.Build.0 = Release|x64
+		{AB208E96-E225-44A0-AC02-6950AB63F7A0}.Release|x86.ActiveCfg = Release|x86
+		{AB208E96-E225-44A0-AC02-6950AB63F7A0}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

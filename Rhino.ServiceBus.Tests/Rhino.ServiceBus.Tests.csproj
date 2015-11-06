@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\xunit.runner.visualstudio.2.1.0\build\net20\xunit.runner.visualstudio.props" Condition="Exists('..\packages\xunit.runner.visualstudio.2.1.0\build\net20\xunit.runner.visualstudio.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -203,6 +204,19 @@
     <Compile Include="Containers\Unity\Can_host_in_another_app_domain.cs" />
     <Compile Include="Containers\Unity\ContainerTests.cs" />
     <Compile Include="HostConfigurationTests.cs" />
+    <Compile Include="RhinoFiles\CustomizingMessageConstruction.cs" />
+    <Compile Include="RhinoFiles\EnablingRhinoFilesPerformanceCounters.cs" />
+    <Compile Include="RhinoFiles\MessageLoggingTests.cs" />
+    <Compile Include="RhinoFiles\FileSubscriptionStorageFixture.cs" />
+    <Compile Include="RhinoFiles\RhinoFiles_Messages_that_have_no_handlers.cs" />
+    <Compile Include="RhinoFiles\UsingOneWayBusWithAlternateStorageLocation.cs" />
+    <Compile Include="RhinoFiles\UsingOneWayBusWithBusNameSpecified.cs" />
+    <Compile Include="RhinoFiles\UsingRhinoFilesBus.cs" />
+    <Compile Include="RhinoFiles\UsingRhinoFilesBusWithAlternateStorageLocation.cs" />
+    <Compile Include="RhinoFiles\UsingRhinoFilesTransport.cs" />
+    <Compile Include="RhinoFiles\WhenErrorOccurs.cs" />
+    <Compile Include="RhinoFiles\WhenReceivingTimedMessage.cs" />
+    <Compile Include="RhinoFiles\WithDebugging.cs" />
     <Compile Include="RhinoQueues\UsingOneWayBusWithBusNameSpecified.cs" />
     <Compile Include="RhinoQueues\CustomizingMessageConstruction.cs" />
     <Compile Include="CanRouteMessageToConsumerThroughContainer.cs" />
@@ -242,7 +256,7 @@
     <Compile Include="RequestReplyWorksWithNoAutomaticSubscriptionConsumer.cs" />
     <Compile Include="RhinoQueues\EnablingRhinoQueuesPerformanceCounters.cs" />
     <Compile Include="RhinoQueues\MessageLoggingTests.cs" />
-    <Compile Include="RhinoQueues\RhinoQueue_Messages_that_have_no_handlers.cs" />
+    <Compile Include="RhinoQueues\RhinoQueues_Messages_that_have_no_handlers.cs" />
     <Compile Include="RhinoQueues\PhtSubscriptionStorageFixture.cs" />
     <Compile Include="RhinoQueues\UsingOneWayBusWithAlternateStorageLocation.cs" />
     <Compile Include="RhinoQueues\UsingRhinoQueuesBus.cs" />
@@ -273,6 +287,10 @@
     <ProjectReference Include="..\Rhino.ServiceBus.Castle\Rhino.ServiceBus.Castle.csproj">
       <Project>{4D65E756-C0C9-42AA-9B73-75E85E77EA7B}</Project>
       <Name>Rhino.ServiceBus.Castle</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rhino.ServiceBus.RhinoFiles\Rhino.ServiceBus.RhinoFiles.csproj">
+      <Project>{ab208e96-e225-44a0-ac02-6950ab63f7a0}</Project>
+      <Name>Rhino.ServiceBus.RhinoFiles</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rhino.ServiceBus.RhinoQueues\Rhino.ServiceBus.RhinoQueues.csproj">
       <Project>{9748B2BF-41EA-487A-944C-A4ABEFFA2087}</Project>
@@ -310,6 +328,7 @@
     <None Include="LoadBalancer.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="packages.config" />
     <None Include="ReceiveOneWayBusRhinoQueues.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -337,12 +356,19 @@
     <None Include="LoadBalancer\BusWithLoadBalancer.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="RhinoFiles\RhinoFiles.config" />
     <None Include="RhinoQueues\RhinoQueues.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\xunit.runner.visualstudio.2.1.0\build\net20\xunit.runner.visualstudio.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\xunit.runner.visualstudio.2.1.0\build\net20\xunit.runner.visualstudio.props'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
