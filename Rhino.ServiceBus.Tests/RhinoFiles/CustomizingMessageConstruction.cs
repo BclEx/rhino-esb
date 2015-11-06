@@ -2,7 +2,7 @@ using System;
 using Castle.Core;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
-using Rhino.Queues;
+using Rhino.Files;
 using Rhino.ServiceBus.Impl;
 using Rhino.ServiceBus.Internal;
 using Rhino.ServiceBus.RhinoFiles;

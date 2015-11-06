@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{AB208E96-E225-44A0-AC02-6950AB63F7A0}</ProjectGuid>
+    <ProjectGuid>{CBC4658C-370E-4C48-8BA4-9E465DB2194A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Rhino.ServiceBus.RhinoFiles</RootNamespace>
-    <AssemblyName>Rhino.ServiceBus.RhinoFiles</AssemblyName>
+    <RootNamespace>Rhino.Files</RootNamespace>
+    <AssemblyName>Rhino.Files</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SignAssembly>true</SignAssembly>
@@ -25,7 +25,7 @@
     <WarningLevel>4</WarningLevel>
     <NoWarn>1607,1591</NoWarn>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <DocumentationFile>bin\Debug\Rhino.ServiceBus.RhinoFiles.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Rhino.Files.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -34,7 +34,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\Rhino.ServiceBus.RhinoFiles.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Rhino.Files.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
@@ -110,31 +110,52 @@
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="Wintellect.Threading">
+      <HintPath>..\SharedLibs\Wintellect.Threading.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Config\RhinoFilesOneWayBusConfigurationAware.cs" />
-    <Compile Include="Config\RhinoFilesConfigurationAware.cs" />
+    <Compile Include="Files\Protocol\Sender.cs" />
+    <Compile Include="Files\Protocol\IMessageAcceptance.cs" />
+    <Compile Include="Files\Protocol\Receiver.cs" />
+    <Compile Include="Files\Storage\QueueActions.cs" />
+    <Compile Include="Files\Storage\SenderActions.cs" />
+    <Compile Include="Files\Storage\GlobalActions.cs" />
+    <Compile Include="Files\Storage\QueueStorage.cs" />
+    <Compile Include="FileWatch\SimpleFileWatch.cs" />
+    <Compile Include="FileWatch\IFileWatch.cs" />
+    <Compile Include="HashTables\AddItemRequest.cs" />
+    <Compile Include="HashTables\RemoveItemRequest.cs" />
+    <Compile Include="HashTables\GetItemsRequest.cs" />
+    <Compile Include="HashTables\HashTableActions.cs" />
+    <Compile Include="HashTables\HashTable.cs" />
+    <Compile Include="Files\Exceptions\CannotSendWhileWaitingForAllMessagesToBeSentException.cs" />
+    <Compile Include="Files\Exceptions\QueueDoesNotExistsException.cs" />
+    <Compile Include="HashTables\HashTableError.cs" />
+    <Compile Include="HashTables\HashTableException.cs" />
+    <Compile Include="Files\Internal\QueuedMessagesSender.cs" />
+    <Compile Include="Files\Internal\TransactionEnlistment.cs" />
+    <Compile Include="Files\Monitoring\PerformanceCountersProvider.cs" />
+    <Compile Include="Files\Monitoring\InboundPerfomanceCounters.cs" />
+    <Compile Include="Files\Monitoring\InstanceNameUtil.cs" />
+    <Compile Include="Files\Monitoring\OutboundPerfomanceCounters.cs" />
+    <Compile Include="Files\Monitoring\PerformanceCategoryCreator.cs" />
+    <Compile Include="Files\Monitoring\PerformanceMonitor.cs" />
+    <Compile Include="Files\Queue.cs" />
+    <Compile Include="Files\MessageEventArgs.cs" />
+    <Compile Include="Files\MessagePayload.cs" />
+    <Compile Include="Files\Model\PersistentMessageToSend.cs" />
+    <Compile Include="Files\Storage\MessageStatus.cs" />
+    <Compile Include="Files\Storage\MessageBookmark.cs" />
+    <Compile Include="Files\Model\HistoryMessage.cs" />
+    <Compile Include="Files\Model\PersistentMessage.cs" />
+    <Compile Include="Files\Model\MessageId.cs" />
+    <Compile Include="Files\Model\Message.cs" />
+    <Compile Include="Files\QueueManager.cs" />
+    <Compile Include="Files\QueueManagerConfiguration.cs" />
+    <Compile Include="Files\Utils\GuidCombGenerator.cs" />
+    <Compile Include="Files\Utils\ThreadSafeSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RhinoFiles\ErrorAction.cs" />
-    <Compile Include="RhinoFiles\FileSubscriptionStorage.cs" />
-    <Compile Include="RhinoFiles\RhinoFileCurrentMessageInformation.cs" />
-    <Compile Include="RhinoFiles\RhinoFilesMessageBuilder.cs" />
-    <Compile Include="RhinoFiles\RhinoFilesOneWayBus.cs" />
-    <Compile Include="RhinoFiles\RhinoFilesTransport.cs" />
-    <Compile Include="RhinoFiles\TimeoutAction.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Rhino.Files\Rhino.Files.csproj">
-      <Project>{cbc4658c-370e-4c48-8ba4-9e465db2194a}</Project>
-      <Name>Rhino.Files</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Rhino.ServiceBus\Rhino.ServiceBus.csproj">
-      <Project>{1B21C8A5-5E0E-412B-A7F4-9F28B4427F21}</Project>
-      <Name>Rhino.ServiceBus</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config.transform" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

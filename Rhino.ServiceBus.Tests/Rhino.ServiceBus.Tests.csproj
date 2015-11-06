@@ -280,6 +280,10 @@
     <Compile Include="XmlSerializerTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rhino.Files\Rhino.Files.csproj">
+      <Project>{cbc4658c-370e-4c48-8ba4-9e465db2194a}</Project>
+      <Name>Rhino.Files</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rhino.ServiceBus.Autofac\Rhino.ServiceBus.Autofac.csproj">
       <Project>{E18B8442-40AF-4FA2-9FB0-FC05FC994CEA}</Project>
       <Name>Rhino.ServiceBus.Autofac</Name>
@@ -356,7 +360,9 @@
     <None Include="LoadBalancer\BusWithLoadBalancer.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="RhinoFiles\RhinoFiles.config" />
+    <None Include="RhinoFiles\RhinoFiles.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="RhinoQueues\RhinoQueues.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
