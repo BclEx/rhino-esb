@@ -58,12 +58,12 @@ namespace Rhino.ServiceBus.RhinoFiles
             return result;
         }
 
-        private void Transport_OnMessageSerializationException(CurrentMessageInformation information, Exception e)
+        private void Transport_OnMessageSerializationException(CurrentMessageInformation information, Exception ex)
         {
             var info = (RhinoFileCurrentMessageInformation)information;
             _failureCounts.Write(writer => writer.Add(info.TransportMessageId, new ErrorCounter
             {
-                ExceptionText = (e == null ? null : e.ToString()),
+                ExceptionText = (ex == null ? null : ex.ToString()),
                 FailureCount = _numberOfRetries + 1
             }));
 
@@ -72,7 +72,7 @@ namespace Rhino.ServiceBus.RhinoFiles
                 info.Queue.MoveTo(SubQueue.Errors.ToString(), info.TransportMessage);
                 info.Queue.EnqueueDirectlyTo(SubQueue.Errors.ToString(), new MessagePayload
                 {
-                    Data = (e == null ? null : Encoding.Unicode.GetBytes(e.ToString())),
+                    Data = (ex == null ? null : Encoding.Unicode.GetBytes(ex.ToString())),
                     Headers =
 					{
 						{"correlation-id", info.TransportMessageId},
@@ -83,9 +83,9 @@ namespace Rhino.ServiceBus.RhinoFiles
             }
         }
 
-        private void Transport_OnMessageProcessingCompleted(CurrentMessageInformation information, Exception e)
+        private void Transport_OnMessageProcessingCompleted(CurrentMessageInformation information, Exception ex)
         {
-            if (e != null)
+            if (ex != null)
                 return;
 
             ErrorCounter val = null;
@@ -95,7 +95,7 @@ namespace Rhino.ServiceBus.RhinoFiles
             _failureCounts.Write(writer => writer.Remove(information.TransportMessageId));
         }
 
-        private void Transport_OnMessageProcessingFailure(CurrentMessageInformation information, Exception e)
+        private void Transport_OnMessageProcessingFailure(CurrentMessageInformation information, Exception ex)
         {
             _failureCounts.Write(writer =>
             {
@@ -104,7 +104,7 @@ namespace Rhino.ServiceBus.RhinoFiles
                 {
                     errorCounter = new ErrorCounter
                     {
-                        ExceptionText = (e == null ? null : e.ToString()),
+                        ExceptionText = (ex == null ? null : ex.ToString()),
                         FailureCount = 0
                     };
                     writer.Add(information.TransportMessageId, errorCounter);

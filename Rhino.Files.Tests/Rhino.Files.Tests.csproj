@@ -40,6 +40,9 @@
     <Reference Include="Common.Logging">
       <HintPath>..\SharedLibs\3.5\Common.Logging.dll</HintPath>
     </Reference>
+    <Reference Include="Common.Logging.NLog32">
+      <HintPath>..\SharedLibs\3.5\Common.Logging.NLog32.dll</HintPath>
+    </Reference>
     <Reference Include="Rhino.Mocks">
       <HintPath>..\SharedLibs\Rhino.Mocks.dll</HintPath>
     </Reference>
@@ -94,6 +97,13 @@
       <Project>{cbc4658c-370e-4c48-8ba4-9e465db2194a}</Project>
       <Name>Rhino.Files</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

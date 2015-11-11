@@ -98,15 +98,11 @@ namespace Rhino.ServiceBus.RhinoFiles
             if (_queueManager != null)
             {
                 const int retries = 5;
-                int tries = 0;
-                bool disposeRudely = false;
+                var tries = 0;
+                var disposeRudely = false;
                 while (true)
                 {
-                    try
-                    {
-                        _queueManager.Dispose();
-                        break;
-                    }
+                    try { _queueManager.Dispose(); break; }
                     catch (HashTableException e)
                     {
                         tries += 1;

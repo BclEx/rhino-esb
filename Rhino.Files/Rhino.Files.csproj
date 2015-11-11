@@ -115,15 +115,23 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Files\Protocol\ProtocolConstants.cs" />
     <Compile Include="Files\Protocol\Sender.cs" />
     <Compile Include="Files\Protocol\IMessageAcceptance.cs" />
     <Compile Include="Files\Protocol\Receiver.cs" />
+    <Compile Include="Files\Protocol\SerializationExtensions.cs" />
+    <Compile Include="Files\Protocol\StreamUtil.cs" />
     <Compile Include="Files\Storage\QueueActions.cs" />
     <Compile Include="Files\Storage\SenderActions.cs" />
     <Compile Include="Files\Storage\GlobalActions.cs" />
     <Compile Include="Files\Storage\QueueStorage.cs" />
-    <Compile Include="FileWatch\SimpleFileWatch.cs" />
-    <Compile Include="FileWatch\IFileWatch.cs" />
+    <Compile Include="FileWatch\AcceptAsyncResult.cs" />
+    <Compile Include="FileWatch\FileWatcher2.cs" />
+    <Compile Include="FileWatch\FileWatcherFile.cs" />
+    <Compile Include="FileWatch\Exceptions\FileWatcherException.cs" />
+    <Compile Include="FileWatch\Exceptions\FileWatcherError.cs" />
+    <Compile Include="FileWatch\SimpleFileWatcher.cs" />
+    <Compile Include="FileWatch\FileWatcher1.cs" />
     <Compile Include="HashTables\AddItemRequest.cs" />
     <Compile Include="HashTables\RemoveItemRequest.cs" />
     <Compile Include="HashTables\GetItemsRequest.cs" />

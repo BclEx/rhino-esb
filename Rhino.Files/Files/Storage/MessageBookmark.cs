@@ -12,7 +12,7 @@ namespace Rhino.Files.Storage
             {
                 if (!string.Equals(QueueName, other.QueueName) || (Size != other.Size))
                     return false;
-                for (int i = 0; i < Size; i++)
+                for (var i = 0; i < Size; i++)
                     if (Bookmark[i] != other.Bookmark[i])
                         return false;
             }

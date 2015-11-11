@@ -46,7 +46,7 @@ namespace Rhino.Files.Tests.Monitoring
             TestEventUpdatesCorrectInstance(
                 qm => qm.MessageQueuedForReceive += null,
                 new Message { Queue = "q" },
-                "127.0.0.1/q");
+                "localhost/q");
         }
 
         [Fact]
@@ -55,7 +55,7 @@ namespace Rhino.Files.Tests.Monitoring
             TestEventUpdatesCorrectInstance(
                 qm => qm.MessageReceived += null,
                 new Message { Queue = "q" },
-                "127.0.0.1/q");
+                "localhost/q");
         }
 
         private void TestEventUpdatesCorrectInstance(Action<IQueueManager> @event, Message message, string expectedInstanceName)

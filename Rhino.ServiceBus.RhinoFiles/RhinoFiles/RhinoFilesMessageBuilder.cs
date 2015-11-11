@@ -26,7 +26,7 @@ namespace Rhino.ServiceBus.RhinoFiles
         public MessagePayload BuildFromMessageBatch(OutgoingMessageInformation messageInformation)
         {
             if (_endpoint == null)
-                throw new InvalidOperationException("A source endpoint is required for Rhino Queues transport, did you Initialize me? try providing a null Uri.");
+                throw new InvalidOperationException("A source endpoint is required for Rhino Files transport, did you Initialize me? try providing a null Uri.");
 
             var messageId = Guid.NewGuid();
             var data = new byte[0];
