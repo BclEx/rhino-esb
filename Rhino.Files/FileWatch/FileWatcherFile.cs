@@ -7,13 +7,7 @@ namespace Rhino.FileWatch
     public class FileWatcherFile
     {
         public string EndPoint { get; set; }
-
-        public Stream GetStream()
-        {
-            return File.OpenRead(Path);
-        }
-        //new ManualResetEvent(false).WaitOne();
-
-        public string Path { get; set; }
+        public string[] Paths { get; set; }
+        public FileWatcherError Error { get; set; }
     }
 }

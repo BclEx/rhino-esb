@@ -41,7 +41,8 @@ namespace Rhino.Files.Internal
             {
                 IList<PersistentMessage> messages = null;
 
-                // normal conditions will be at 5, when there are several unreliable endpoints it will grow up to 31 connections all attempting to connect, timeouts can take up to 30 seconds
+                //normal conditions will be at 5, when there are several unreliable endpoints 
+                //it will grow up to 31 connections all attempting to connect, timeouts can take up to 30 seconds
                 if ((_currentlySendingCount - _currentlyConnecting > 5) || _currentlyConnecting > 30)
                 {
                     lock (_lock)
@@ -67,16 +68,16 @@ namespace Rhino.Files.Internal
                 Interlocked.Increment(ref _currentlyConnecting);
                 new Sender
                 {
-                    //Connected = () => Interlocked.Decrement(ref _currentlyConnecting),
+                    Connected = () => Interlocked.Decrement(ref _currentlyConnecting),
                     Destination = point,
                     Messages = messages.ToArray(),
                     Success = OnSuccess(messages),
                     Failure = OnFailure(point, messages),
-                    //FailureToConnect = e =>
-                    //{
-                    //    Interlocked.Decrement(ref _currentlyConnecting);
-                    //    OnFailure(point, messages)(e);
-                    //},
+                    FailureToConnect = e =>
+                    {
+                        Interlocked.Decrement(ref _currentlyConnecting);
+                        OnFailure(point, messages)(e);
+                    },
                     Revert = OnRevert(point),
                     Commit = OnCommit(point, messages)
                 }.Send();
@@ -132,7 +133,7 @@ namespace Rhino.Files.Internal
                     });
                     return newBookmarks.ToArray();
                 }
-                finally { Interlocked.Decrement(ref this._currentlySendingCount); }
+                finally { Interlocked.Decrement(ref _currentlySendingCount); }
             };
         }
 

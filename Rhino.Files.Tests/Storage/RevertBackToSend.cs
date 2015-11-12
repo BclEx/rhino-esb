@@ -32,7 +32,7 @@ namespace Rhino.Files.Tests.Storage
                 };
                 qf.Global(actions =>
                 {
-                    Guid transactionId = Guid.NewGuid();
+                    var transactionId = Guid.NewGuid();
                     actions.RegisterToSend("localhost",
                         "test",
                         null,

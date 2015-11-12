@@ -1,16 +1,14 @@
-
-using Common.Logging;
 using Rhino.FileWatch.Exceptions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Queue = System.Collections.Queue;
 
 namespace Rhino.FileWatch
 {
-#if true
     public abstract class FileWatcher
     {
+        volatile TaskCompletionSource<FileWatcherFile> _tcs = new TaskCompletionSource<FileWatcherFile>();
+
         protected bool Active { get; set; }
 
         public virtual void Start()
@@ -27,7 +25,27 @@ namespace Rhino.FileWatch
 
         #region WaitAndQueue
 
-        public abstract FileWatcherFile WaitAsync(out FileWatcherError error);
+        protected FileWatcherFile WaitAsync()
+        {
+            _tcs.Task.Wait();
+            return _tcs.Task.Result;
+        }
+
+        protected void WaitSetResult(FileWatcherFile result)
+        {
+            _tcs.SetResult(result);
+            WaitReset();
+        }
+
+        private void WaitReset()
+        {
+            while (true)
+            {
+                var tcs = _tcs;
+                if (!tcs.Task.IsCompleted || Interlocked.CompareExchange(ref _tcs, new TaskCompletionSource<FileWatcherFile>(), tcs) == tcs)
+                    return;
+            }
+        }
 
         private void DoWaitAsync(AcceptAsyncResult asyncResult)
         {
@@ -44,9 +62,8 @@ namespace Rhino.FileWatch
             try
             {
                 Monitor.Enter(watcher, ref lockTaken);
-                object result = null;
-                result = WaitAsync(out success);
-                switch (success)
+                var result = WaitAsync();
+                switch (result.Error)
                 {
                     case FileWatcherError.Success:
                         asyncResult.Result = result;
@@ -99,5 +116,4 @@ namespace Rhino.FileWatch
 
         #endregion
     }
-#endif
 }
