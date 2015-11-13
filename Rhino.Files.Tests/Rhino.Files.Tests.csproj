@@ -40,9 +40,6 @@
     <Reference Include="Common.Logging">
       <HintPath>..\SharedLibs\3.5\Common.Logging.dll</HintPath>
     </Reference>
-    <Reference Include="Common.Logging.NLog32">
-      <HintPath>..\SharedLibs\3.5\Common.Logging.NLog32.dll</HintPath>
-    </Reference>
     <Reference Include="Rhino.Mocks">
       <HintPath>..\SharedLibs\Rhino.Mocks.dll</HintPath>
     </Reference>

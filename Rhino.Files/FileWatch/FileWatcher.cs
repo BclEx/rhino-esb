@@ -25,12 +25,6 @@ namespace Rhino.FileWatch
 
         #region WaitAndQueue
 
-        protected FileWatcherFile WaitAsync()
-        {
-            _tcs.Task.Wait();
-            return _tcs.Task.Result;
-        }
-
         protected void WaitSetResult(FileWatcherFile result)
         {
             _tcs.SetResult(result);
@@ -56,14 +50,13 @@ namespace Rhino.FileWatch
         {
             if (!Active)
                 throw new InvalidOperationException("mustlisten");
-            var watcher = this;
             var success = FileWatcherError.Success;
-            var lockTaken = false;
-            try
+            lock (this)
             {
-                Monitor.Enter(watcher, ref lockTaken);
-                var result = WaitAsync();
-                switch (result.Error)
+                var result = _tcs.Task.Result;
+                //WaitReset();
+                success = result.Error;
+                switch (success)
                 {
                     case FileWatcherError.Success:
                         asyncResult.Result = result;
@@ -73,7 +66,6 @@ namespace Rhino.FileWatch
                         break;
                 }
             }
-            finally { if (lockTaken) Monitor.Exit(watcher); }
             if (success == FileWatcherError.Success)
                 asyncResult.InvokeCallback();
             else
