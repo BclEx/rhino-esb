@@ -5,19 +5,16 @@ using System.Collections.Generic;
 
 namespace Rhino.Files.Storage
 {
-    public class GlobalActions : IDisposable
+    public class GlobalActions : AbstractActions
     {
         readonly QueueManagerConfiguration _configuration;
         readonly ILog _logger;
 
         public GlobalActions(string database, QueueManagerConfiguration configuration)
+            : base(database)
         {
             _logger = LogManager.GetLogger(typeof(GlobalActions));
             _configuration = configuration;
-        }
-
-        public void Dispose()
-        {
         }
 
         public void RemoveReversalsMoveCompletedMessagesAndFinishSubQueueMove(Guid Id)
@@ -29,10 +26,6 @@ namespace Rhino.Files.Storage
         }
 
         public void DeleteRecoveryInformation(Guid Id)
-        {
-        }
-
-        public void Commit()
         {
         }
 
@@ -65,11 +58,6 @@ namespace Rhino.Files.Storage
 
         public void CreateQueueIfDoesNotExists(string queueName)
         {
-        }
-
-        public QueueActions GetQueue(string p)
-        {
-            return null;
         }
 
         public void MarkReceived(Model.MessageId messageId)

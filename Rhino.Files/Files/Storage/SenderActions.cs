@@ -5,19 +5,16 @@ using System.Collections.Generic;
 
 namespace Rhino.Files.Storage
 {
-    public class SenderActions : IDisposable
+    public class SenderActions : AbstractActions
     {
         readonly QueueManagerConfiguration _configuration;
         readonly ILog _logger;
 
         public SenderActions(string database, QueueManagerConfiguration configuration)
+            : base(database)
         {
             _logger = LogManager.GetLogger(typeof(GlobalActions));
             _configuration = configuration;
-        }
-
-        public void Dispose()
-        {
         }
 
         public IList<PersistentMessage> GetMessagesToSendAndMarkThemAsInFlight(int p1, int p2, out string point)

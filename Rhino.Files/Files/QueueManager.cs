@@ -131,7 +131,7 @@ namespace Rhino.Files
             _sendingThread = new Thread(_queuedMessagesSender.Send)
             {
                 IsBackground = true,
-                Name = "Rhino Queue Sender Thread for " + _path
+                Name = "Rhino File Sender Thread for " + _path
             };
             _sendingThread.Start();
             _purgeOldDataTimer = new Timer(_ => PurgeOldData(), null, TimeSpan.FromMinutes(3), TimeSpan.FromMinutes(3));
@@ -474,7 +474,7 @@ namespace Rhino.Files
         {
             AssertNotDisposedOrDisposing();
             if (Transaction.Current == null)
-                throw new InvalidOperationException("You must use TransactionScope when using Rhino.Queues");
+                throw new InvalidOperationException("You must use TransactionScope when using Rhino.Files");
             if (CurrentlyEnslistedTransaction == Transaction.Current)
                 return;
             // need to change the enlistment

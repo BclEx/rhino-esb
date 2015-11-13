@@ -121,6 +121,7 @@
     <Compile Include="Files\Protocol\Receiver.cs" />
     <Compile Include="Files\Protocol\SerializationExtensions.cs" />
     <Compile Include="Files\Protocol\StreamUtil.cs" />
+    <Compile Include="Files\Storage\AbstractActions.cs" />
     <Compile Include="Files\Storage\QueueActions.cs" />
     <Compile Include="Files\Storage\SenderActions.cs" />
     <Compile Include="Files\Storage\GlobalActions.cs" />

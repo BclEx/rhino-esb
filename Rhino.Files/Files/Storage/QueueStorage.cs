@@ -23,6 +23,16 @@ namespace Rhino.Files.Storage
             _database = Path.Combine(_path, Path.GetFileName(database));
         }
 
+        #region Dispose
+
+        public void Initialize()
+        {
+            try
+            {
+            }
+            catch (Exception e) { Dispose(); throw new InvalidOperationException("Could not open queue: " + _database, e); }
+        }
+
         public void Dispose()
         {
             _usageLock.EnterWriteLock();
@@ -53,6 +63,8 @@ namespace Rhino.Files.Storage
             finally { _usageLock.ExitWriteLock(); }
         }
 
+        #endregion
+
         public void Global(Action<GlobalActions> action)
         {
             var primaryLock = !_usageLock.IsReadLockHeld;
@@ -63,19 +75,7 @@ namespace Rhino.Files.Storage
                 using (var actions = new GlobalActions(_database, _configuration))
                     action(actions);
             }
-            finally
-            {
-                if (primaryLock)
-                    _usageLock.ExitReadLock();
-            }
-        }
-
-        public void Initialize()
-        {
-            try
-            {
-            }
-            catch (Exception e) { Dispose(); throw new InvalidOperationException("Could not open queue: " + _database, e); }
+            finally { if (primaryLock) _usageLock.ExitReadLock(); }
         }
 
         public void Send(Action<SenderActions> action)
@@ -88,11 +88,7 @@ namespace Rhino.Files.Storage
                 using (var actions = new SenderActions(_database, _configuration))
                     action(actions);
             }
-            finally
-            {
-                if (primaryLock)
-                    _usageLock.ExitReadLock();
-            }
+            finally { if (primaryLock) _usageLock.ExitReadLock(); }
         }
 
         public Guid Id { get; private set; }
