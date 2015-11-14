@@ -118,10 +118,10 @@ namespace Rhino.Files.Protocol
         //    }
         //}
 
-        //public static string ToQueryString(this NameValueCollection qs)
-        //{
-        //    return string.Join("&", Array.ConvertAll<string, string>(qs.AllKeys, key => string.Format("{0}={1}", MonoHttpUtility.UrlEncode(key), MonoHttpUtility.UrlEncode(qs[key]))));
-        //}
+        public static string ToQueryString(this NameValueCollection qs)
+        {
+            return string.Join("&", Array.ConvertAll<string, string>(qs.AllKeys, key => string.Format("{0}={1}", MonoHttpUtility.UrlEncode(key), MonoHttpUtility.UrlEncode(qs[key]))));
+        }
     }
 }
 

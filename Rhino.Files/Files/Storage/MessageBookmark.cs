@@ -10,19 +10,17 @@ namespace Rhino.Files.Storage
                 return false;
             if (!object.ReferenceEquals(this, other))
             {
-                if (!string.Equals(QueueName, other.QueueName) || (Size != other.Size))
+                if (!string.Equals(QueueName, other.QueueName))
                     return false;
-                for (var i = 0; i < Size; i++)
-                    if (Bookmark[i] != other.Bookmark[i])
-                        return false;
+                if (!string.Equals(Bookmark, other.Bookmark))
+                    return false;
             }
             return true;
         }
         public override bool Equals(object obj) { return Equals(obj as MessageBookmark); }
-        public override int GetHashCode() { int num = (QueueName.GetHashCode() * 0x18d) ^ Size; return ((num * 0x18d) ^ Bookmark.GetHashCode()); }
+        public override int GetHashCode() { int num = (QueueName.GetHashCode() * 0x18d); return ((num * 0x18d) ^ Bookmark.GetHashCode()); }
 
-        public byte[] Bookmark = new byte[1];
+        public string Bookmark = string.Empty;
         public string QueueName;
-        public int Size = 1;
     }
 }

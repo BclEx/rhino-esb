@@ -99,6 +99,9 @@
     <Reference Include="Common.Logging">
       <HintPath>..\SharedLibs\3.5\Common.Logging.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\SharedLibs\3.5\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core">
@@ -106,6 +109,7 @@
     </Reference>
     <Reference Include="System.Transactions" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -122,10 +126,13 @@
     <Compile Include="Files\Protocol\SerializationExtensions.cs" />
     <Compile Include="Files\Protocol\StreamUtil.cs" />
     <Compile Include="Files\Storage\AbstractActions.cs" />
+    <Compile Include="Files\Storage\OutgoingMessageStatus.cs" />
     <Compile Include="Files\Storage\QueueActions.cs" />
     <Compile Include="Files\Storage\SenderActions.cs" />
     <Compile Include="Files\Storage\GlobalActions.cs" />
     <Compile Include="Files\Storage\QueueStorage.cs" />
+    <Compile Include="Files\Utils\MonoHttpEncoder.cs" />
+    <Compile Include="Files\Utils\MonoHttpUtility.cs" />
     <Compile Include="FileWatch\AcceptAsyncResult.cs" />
     <Compile Include="FileWatch\Exceptions\FileWatcher2.cs" />
     <Compile Include="FileWatch\FileWatcherFile.cs" />

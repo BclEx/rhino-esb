@@ -7,29 +7,24 @@ namespace Rhino.Files.Storage
 {
     public class QueueStorage : IDisposable
     {
+        readonly ILog _log = LogManager.GetLogger(typeof(QueueStorage));
         readonly QueueManagerConfiguration _configuration;
         readonly string _database;
-        readonly ILog _log = LogManager.GetLogger(typeof(QueueStorage));
-        readonly string _path;
+        readonly Guid _instanceId;
         readonly ReaderWriterLockSlim _usageLock = new ReaderWriterLockSlim();
 
         public QueueStorage(string database, QueueManagerConfiguration configuration)
         {
             _configuration = configuration;
-            _database = database;
-            _path = database;
-            if (!Path.IsPathRooted(database))
-                _path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, database);
-            _database = Path.Combine(_path, Path.GetFileName(database));
+            _database = (!Path.IsPathRooted(database) ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, database) : database);
+            _instanceId = new Guid();
         }
 
         #region Dispose
 
         public void Initialize()
         {
-            try
-            {
-            }
+            try { if (!Directory.Exists(_database)) Directory.CreateDirectory(_database); }
             catch (Exception e) { Dispose(); throw new InvalidOperationException("Could not open queue: " + _database, e); }
         }
 
@@ -72,7 +67,7 @@ namespace Rhino.Files.Storage
             {
                 if (primaryLock)
                     _usageLock.EnterReadLock();
-                using (var actions = new GlobalActions(_database, _configuration))
+                using (var actions = new GlobalActions(_database, _instanceId, _configuration))
                     action(actions);
             }
             finally { if (primaryLock) _usageLock.ExitReadLock(); }
@@ -85,7 +80,7 @@ namespace Rhino.Files.Storage
             {
                 if (primaryLock)
                     _usageLock.EnterReadLock();
-                using (var actions = new SenderActions(_database, _configuration))
+                using (var actions = new SenderActions(_database, _instanceId, _configuration))
                     action(actions);
             }
             finally { if (primaryLock) _usageLock.ExitReadLock(); }

@@ -9,11 +9,13 @@ namespace Rhino.Files.Storage
     public class AbstractActions : IDisposable
     {
         protected readonly Dictionary<string, QueueActions> _queuesByName = new Dictionary<string, QueueActions>();
-        readonly string _database;
+        protected readonly string _database;
+        protected readonly Guid _instanceId;
 
-        public AbstractActions(string database)
+        public AbstractActions(string database, Guid instanceId)
         {
             _database = database;
+            _instanceId = instanceId;
         }
 
         public void Dispose()
@@ -28,7 +30,7 @@ namespace Rhino.Files.Storage
             if (false)
                 throw new QueueDoesNotExistsException(queueName);
 
-            _queuesByName[queueName] = actions = new QueueActions(_database, queueName, GetSubqueues(queueName), this, i => AddToNumberOfMessagesIn(queueName, i));
+            _queuesByName[queueName] = actions = new QueueActions(_database, _instanceId, queueName, GetSubqueues(queueName), this, i => AddToNumberOfMessagesIn(queueName, i));
             return actions;
         }
 
