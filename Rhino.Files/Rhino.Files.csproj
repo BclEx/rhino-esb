@@ -131,9 +131,11 @@
     <Compile Include="Files\Storage\SenderActions.cs" />
     <Compile Include="Files\Storage\GlobalActions.cs" />
     <Compile Include="Files\Storage\QueueStorage.cs" />
+    <Compile Include="Files\Storage\FileUtil.cs" />
     <Compile Include="Files\Utils\MonoHttpEncoder.cs" />
     <Compile Include="Files\Utils\MonoHttpUtility.cs" />
     <Compile Include="FileWatch\AcceptAsyncResult.cs" />
+    <Compile Include="FileWatch\DebounceFileWatcher.cs" />
     <Compile Include="FileWatch\Exceptions\FileWatcher2.cs" />
     <Compile Include="FileWatch\FileWatcherFile.cs" />
     <Compile Include="FileWatch\Exceptions\FileWatcherException.cs" />

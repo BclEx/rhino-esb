@@ -1,5 +1,6 @@
 using Rhino.FileWatch.Exceptions;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,7 +8,7 @@ namespace Rhino.FileWatch
 {
     public abstract class FileWatcher
     {
-        volatile TaskCompletionSource<FileWatcherFile> _tcs = new TaskCompletionSource<FileWatcherFile>();
+        volatile TaskCompletionSource<IEnumerable<FileWatcherFile>> _tcs = new TaskCompletionSource<IEnumerable<FileWatcherFile>>();
 
         protected bool Active { get; set; }
 
@@ -23,53 +24,56 @@ namespace Rhino.FileWatch
             Active = false;
         }
 
-        #region WaitAndQueue
+        #region WaitResult
 
-        protected void WaitSetResult(FileWatcherFile result)
+        protected virtual void SetResult(IEnumerable<FileWatcherFile> result)
         {
             _tcs.SetResult(result);
-            WaitReset();
-        }
-
-        private void WaitReset()
-        {
             while (true)
             {
                 var tcs = _tcs;
-                if (!tcs.Task.IsCompleted || Interlocked.CompareExchange(ref _tcs, new TaskCompletionSource<FileWatcherFile>(), tcs) == tcs)
+                if (!tcs.Task.IsCompleted || Interlocked.CompareExchange(ref _tcs, new TaskCompletionSource<IEnumerable<FileWatcherFile>>(), tcs) == tcs)
                     return;
             }
         }
 
-        private void DoWaitAsync(AcceptAsyncResult asyncResult)
+        private void WaitResult(AcceptAsyncResult asyncResult)
         {
-            Task.Factory.StartNew(s => DoBeginAccept((AcceptAsyncResult)s), asyncResult, CancellationToken.None, TaskCreationOptions.PreferFairness, TaskScheduler.Default);
+            Task.Factory.StartNew(s => WaitResultCallback((AcceptAsyncResult)s), asyncResult, CancellationToken.None, TaskCreationOptions.PreferFairness, TaskScheduler.Default);
         }
 
-        private void DoBeginAccept(AcceptAsyncResult asyncResult)
+        private void WaitResultCallback(AcceptAsyncResult asyncResult)
         {
             if (!Active)
                 throw new InvalidOperationException("mustlisten");
-            var success = FileWatcherError.Success;
-            lock (this)
-            {
-                var result = _tcs.Task.Result;
-                //WaitReset();
-                success = result.Error;
-                switch (success)
+            foreach (var r in _tcs.Task.Result)
+                switch (r.Error)
                 {
                     case FileWatcherError.Success:
-                        asyncResult.Result = result;
+                        asyncResult.Result = r;
+                        asyncResult.InvokeCallback();
                         break;
                     default:
-                        asyncResult.ErrorCode = (int)success;
-                        break;
+                        //asyncResult.ErrorCode = (int)r.Error;
+                        throw new FileWatcherException(r.Error);
                 }
-            }
-            if (success == FileWatcherError.Success)
-                asyncResult.InvokeCallback();
-            else
-                throw new FileWatcherException(success);
+            //var success = FileWatcherError.Success;
+            //IEnumerable<FileWatcherFile> result;
+            //lock (this)
+            //{
+            //result = _tcs.Task.Result;
+            //success = result.Error;
+            //switch (success)
+            //{
+            //    case FileWatcherError.Success:
+            //        asyncResult.Result = result;
+            //        break;
+            //    default:
+            //        asyncResult.ErrorCode = (int)success;
+            //        break;
+            //}
+            //}
+
         }
 
         #endregion
@@ -82,7 +86,7 @@ namespace Rhino.FileWatch
                 throw new InvalidOperationException("watch_stopped");
             // async
             var asyncResult = new AcceptAsyncResult(this, state, callback);
-            DoWaitAsync(asyncResult);
+            WaitResult(asyncResult);
             return asyncResult;
         }
 

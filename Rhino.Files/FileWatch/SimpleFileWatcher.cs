@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Rhino.FileWatch
 {
-    public class SimpleFileWatcher : FileWatcher
+    public class SimpleFileWatcher : DebounceFileWatcher
     {
         readonly FileSystemWatcher _watcher = new FileSystemWatcher();
 
@@ -39,7 +39,7 @@ namespace Rhino.FileWatch
         {
             if (e.FullPath.EndsWith(".sending"))
                 return;
-            WaitSetResult(new FileWatcherFile
+            SetResult(new FileWatcherFile
             {
                 EndPoint = _watcher.Path,
                 Paths = new[] { e.FullPath },

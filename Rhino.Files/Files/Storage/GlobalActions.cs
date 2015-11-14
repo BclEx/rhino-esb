@@ -39,20 +39,16 @@ namespace Rhino.Files.Storage
 
         public class QueueMsg
         {
-            public DateTime timestamp { get; set; }
             public byte[] data { get; set; }
-            public Guid instanceId { get; set; }
-            public Guid msgId { get; set; }
-            public string subqueue { get; set; }
             public string headers { get; set; }
         }
 
         public void CreateQueueIfDoesNotExists(string queueName)
         {
-            if (Directory.Exists(_database))
+            if (!Directory.Exists(_database))
                 Directory.CreateDirectory(_database);
             var path = Path.Combine(_database, queueName);
-            if (Directory.Exists(path))
+            if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
         }
 
@@ -62,7 +58,7 @@ namespace Rhino.Files.Storage
 
         public void RegisterRecoveryInformation(Guid transactionId, byte[] information)
         {
-            if (Directory.Exists(_recoveryPath))
+            if (!Directory.Exists(_recoveryPath))
                 Directory.CreateDirectory(_recoveryPath);
             var path = Path.Combine(_recoveryPath, transactionId.ToString());
             File.WriteAllBytes(path, information);
@@ -82,7 +78,6 @@ namespace Rhino.Files.Storage
             if (!Directory.Exists(_recoveryPath))
                 return Enumerable.Empty<byte[]>();
             return Directory.EnumerateFiles(_recoveryPath)
-                .OrderBy(x => x)
                 .Select(File.ReadAllBytes);
         }
 
@@ -101,9 +96,9 @@ namespace Rhino.Files.Storage
 
         public void RegisterUpdateToReverse(Guid txId, MessageBookmark bookmark, MessageStatus statusToRestore, string subQueue)
         {
-            if (Directory.Exists(_txsPath))
+            if (!Directory.Exists(_txsPath))
                 Directory.CreateDirectory(_txsPath);
-            var path = Path.Combine(_txsPath, bookmark.Bookmark);
+            var path = Path.Combine(_txsPath, Path.GetFileName(bookmark.Bookmark));
             if (File.Exists(path))
                 File.Delete(path);
             var obj = new Tx
@@ -119,54 +114,28 @@ namespace Rhino.Files.Storage
 
         public void RemoveReversalsMoveCompletedMessagesAndFinishSubQueueMove(Guid transactionId)
         {
-            //Api.JetSetCurrentIndex(session, txs, "by_tx_id");
-            //Api.MakeKey(session, txs, transactionId.ToByteArray(), MakeKeyGrbit.NewKey);
-
-            //if (Api.TrySeek(session, txs, SeekGrbit.SeekEQ) == false)
-            //    return;
-            //Api.MakeKey(session, txs, transactionId.ToByteArray(), MakeKeyGrbit.NewKey);
-            //try
-            //{
-            //    Api.JetSetIndexRange(session, txs, SetIndexRangeGrbit.RangeInclusive | SetIndexRangeGrbit.RangeUpperLimit);
-            //}
-            //catch (EsentErrorException e)
-            //{
-            //    if (e.Error != JET_err.NoCurrentRecord)
-            //        throw;
-            //    return;
-            //}
-
-            //do
-            //{
-            //    var queue = Api.RetrieveColumnAsString(session, txs, ColumnsInformation.TxsColumns["queue"], Encoding.Unicode);
-            //    var bookmarkData = Api.RetrieveColumn(session, txs, ColumnsInformation.TxsColumns["bookmark_data"]);
-            //    var bookmarkSize = Api.RetrieveColumnAsInt32(session, txs, ColumnsInformation.TxsColumns["bookmark_size"]).Value;
-
-            //    var actions = GetQueue(queue);
-
-            //    var bookmark = new MessageBookmark
-            //    {
-            //        Bookmark = bookmarkData,
-            //        QueueName = queue,
-            //        Size = bookmarkSize
-            //    };
-
-            //    switch (actions.GetMessageStatus(bookmark))
-            //    {
-            //        case MessageStatus.SubqueueChanged:
-            //        case MessageStatus.EnqueueWait:
-            //            actions.SetMessageStatus(bookmark, MessageStatus.ReadyToDeliver);
-            //            break;
-            //        default:
-            //            if (configuration.EnableProcessedMessageHistory)
-            //                actions.MoveToHistory(bookmark);
-            //            else
-            //                actions.Delete(bookmark);
-            //            break;
-            //    }
-
-            //    Api.JetDelete(session, txs);
-            //} while (Api.TryMoveNext(session, txs));
+            if (!Directory.Exists(_txsPath))
+                return;
+            foreach (var path in Directory.EnumerateFiles(_txsPath, FileUtil.SearchTransactionId(transactionId, null)))
+            {
+                var obj = JsonConvert.DeserializeObject<Tx>(path);
+                var actions = GetQueue(obj.queue);
+                var bookmark = new MessageBookmark { Bookmark = obj.bookmark, QueueName = obj.queue };
+                switch (actions.GetMessageStatus(bookmark))
+                {
+                    case MessageStatus.SubqueueChanged:
+                    case MessageStatus.EnqueueWait:
+                        actions.SetMessageStatus(bookmark, MessageStatus.ReadyToDeliver);
+                        break;
+                    default:
+                        if (_configuration.EnableProcessedMessageHistory)
+                            actions.MoveToHistory(bookmark);
+                        else
+                            actions.Delete(bookmark);
+                        break;
+                }
+                File.Delete(path);
+            }
         }
 
         #endregion
@@ -192,7 +161,7 @@ namespace Rhino.Files.Storage
 
         public Guid RegisterToSend(string destination, string queue, string subQueue, MessagePayload payload, Guid transactionId)
         {
-            if (Directory.Exists(_outgoingPath))
+            if (!Directory.Exists(_outgoingPath))
                 Directory.CreateDirectory(_outgoingPath);
             var msgId = GuidCombGenerator.Generate();
             var obj = new Outgoing
@@ -211,12 +180,8 @@ namespace Rhino.Files.Storage
                 deliverBy = payload.DeliverBy,
                 maxAttempts = payload.MaxAttempts,
             };
-            var path = Path.Combine(_outgoingPath, transactionId.ToString() + "." + OutgoingMessageStatus.NotReady.ToString());
-            using (var s = File.CreateText(path))
-            {
-                s.Write(JsonConvert.SerializeObject(obj));
-                s.Flush();
-            }
+            var path = Path.Combine(_outgoingPath, FileUtil.FromTransactionId(transactionId, OutgoingMessageStatus.NotReady.ToString()));
+            File.WriteAllText(path, JsonConvert.SerializeObject(obj));
             var bookmark = new MessageBookmark { Bookmark = path };
             _outgoingBookmark = bookmark;
             _logger.DebugFormat("Created output message '{0}' for 'file://{1}/{2}/{3}' as NotReady", msgId, destination, queue, subQueue);
@@ -227,12 +192,10 @@ namespace Rhino.Files.Storage
         {
             if (!Directory.Exists(_outgoingPath))
                 return;
-            var newExtension = "." + OutgoingMessageStatus.Ready.ToString();
-            var paths = Directory.EnumerateFiles(_outgoingPath, transactionId.ToString() + ".*");
-            foreach (var path in paths)
+            var newExtension = OutgoingMessageStatus.Ready.ToString();
+            foreach (var path in Directory.EnumerateFiles(_outgoingPath, FileUtil.SearchTransactionId(transactionId, null)))
             {
-                var newPath = path.Substring(0, path.Length - Path.GetExtension(path).Length) + newExtension;
-                File.Move(path, newPath);
+                FileUtil.MoveExtension(path, newExtension);
                 _logger.DebugFormat("Marking output message {0} as Ready", transactionId);
             }
         }
@@ -241,8 +204,7 @@ namespace Rhino.Files.Storage
         {
             if (!Directory.Exists(_outgoingPath))
                 return;
-            var paths = Directory.EnumerateFiles(_outgoingPath, transactionId.ToString() + ".*");
-            foreach (var path in paths)
+            foreach (var path in Directory.EnumerateFiles(_outgoingPath, FileUtil.FromTransactionId(transactionId, null)))
             {
                 _logger.DebugFormat("Deleting output message {0}", transactionId);
                 File.Delete(path);
@@ -253,13 +215,9 @@ namespace Rhino.Files.Storage
         {
             if (!Directory.Exists(_outgoingPath))
                 return;
-            var newExtension = "." + OutgoingMessageStatus.Ready.ToString();
-            var paths = Directory.EnumerateFiles(_outgoingPath, "*." + OutgoingMessageStatus.InFlight.ToString());
-            foreach (var path in paths)
-            {
-                var newPath = path.Substring(0, path.Length - Path.GetExtension(path).Length) + newExtension;
-                File.Move(path, newPath);
-            }
+            var newExtension = OutgoingMessageStatus.Ready.ToString();
+            foreach (var path in Directory.EnumerateFiles(_outgoingPath, FileUtil.SearchTransactionId(Guid.Empty, OutgoingMessageStatus.InFlight.ToString())))
+                FileUtil.MoveExtension(path, newExtension);
         }
 
         #endregion
@@ -271,79 +229,46 @@ namespace Rhino.Files.Storage
             if (!Directory.Exists(_recoveryPath))
                 return;
 
-            //var txsWithRecovery = new HashSet<Guid>();
-            //Api.MoveBeforeFirst(session, recovery);
-            //while (Api.TryMoveNext(session, recovery))
-            //{
-            //    var idAsBytes = Api.RetrieveColumn(session, recovery, ColumnsInformation.RecoveryColumns["tx_id"]);
-            //    txsWithRecovery.Add(new Guid(idAsBytes));
-            //}
+            var txsWithRecovery = new HashSet<Guid>();
+            foreach (var x in Directory.EnumerateFiles(_recoveryPath))
+                txsWithRecovery.Add(new Guid(x));
 
-            //var txsWithoutRecovery = new HashSet<Guid>();
-            //Api.MoveBeforeFirst(session, txs);
-            //while (Api.TryMoveNext(session, txs))
-            //{
-            //    var idAsBytes = Api.RetrieveColumn(session, txs, ColumnsInformation.RecoveryColumns["tx_id"]);
-            //    txsWithoutRecovery.Add(new Guid(idAsBytes));
-            //}
+            var txsWithoutRecovery = new HashSet<Guid>();
+            foreach (var x in Directory.EnumerateFiles(_txsPath))
+                txsWithoutRecovery.Add(new Guid(x));
 
-            //foreach (var txId in txsWithoutRecovery)
-            //{
-            //    if (txsWithRecovery.Contains(txId))
-            //        continue;
-            //    ReverseAllFrom(txId);
-            //}
+            foreach (var txId in txsWithoutRecovery)
+            {
+                if (txsWithRecovery.Contains(txId))
+                    continue;
+                ReverseAllFrom(txId);
+            }
         }
 
         public void ReverseAllFrom(Guid transactionId)
         {
-            //Api.JetSetCurrentIndex(session, txs, "by_tx_id");
-            //Api.MakeKey(session, txs, transactionId.ToByteArray(), MakeKeyGrbit.NewKey);
-
-            //if (Api.TrySeek(session, txs, SeekGrbit.SeekEQ) == false)
-            //    return;
-
-            //Api.MakeKey(session, txs, transactionId.ToByteArray(), MakeKeyGrbit.NewKey);
-            //try
-            //{
-            //    Api.JetSetIndexRange(session, txs, SetIndexRangeGrbit.RangeUpperLimit | SetIndexRangeGrbit.RangeInclusive);
-            //}
-            //catch (EsentErrorException e)
-            //{
-            //    if (e.Error != JET_err.NoCurrentRecord)
-            //        throw;
-            //    return;
-            //}
-
-            //do
-            //{
-            //    var bytes = Api.RetrieveColumn(session, txs, ColumnsInformation.TxsColumns["bookmark_data"]);
-            //    var size = Api.RetrieveColumnAsInt32(session, txs, ColumnsInformation.TxsColumns["bookmark_size"]).Value;
-            //    var oldStatus = (MessageStatus)Api.RetrieveColumnAsInt32(session, txs, ColumnsInformation.TxsColumns["value_to_restore"]).Value;
-            //    var queue = Api.RetrieveColumnAsString(session, txs, ColumnsInformation.TxsColumns["queue"]);
-            //    var subqueue = Api.RetrieveColumnAsString(session, txs, ColumnsInformation.TxsColumns["subqueue"]);
-
-            //    var bookmark = new MessageBookmark
-            //    {
-            //        QueueName = queue,
-            //        Bookmark = bytes,
-            //        Size = size
-            //    };
-            //    var actions = GetQueue(queue);
-            //    var newStatus = actions.GetMessageStatus(bookmark);
-            //    switch (newStatus)
-            //    {
-            //        case MessageStatus.SubqueueChanged:
-            //            actions.SetMessageStatus(bookmark, MessageStatus.ReadyToDeliver, subqueue);
-            //            break;
-            //        case MessageStatus.EnqueueWait:
-            //            actions.Delete(bookmark);
-            //            break;
-            //        default:
-            //            actions.SetMessageStatus(bookmark, oldStatus);
-            //            break;
-            //    }
-            //} while (Api.TryMoveNext(session, txs));
+            if (!Directory.Exists(_txsPath))
+                return;
+            foreach (var x in Directory.EnumerateFiles(_txsPath, FileUtil.SearchTransactionId(transactionId, null)))
+            {
+                var obj = JsonConvert.DeserializeObject<Tx>(x);
+                var oldStatus = (MessageStatus)obj.valueToRestore;
+                var subqueue = obj.subqueue;
+                var actions = GetQueue(obj.queue);
+                var bookmark = new MessageBookmark { Bookmark = obj.bookmark, QueueName = obj.queue };
+                switch (actions.GetMessageStatus(bookmark))
+                {
+                    case MessageStatus.SubqueueChanged:
+                        actions.SetMessageStatus(bookmark, MessageStatus.ReadyToDeliver, subqueue);
+                        break;
+                    case MessageStatus.EnqueueWait:
+                        actions.Delete(bookmark);
+                        break;
+                    default:
+                        actions.SetMessageStatus(bookmark, oldStatus);
+                        break;
+                }
+            }
         }
 
         #endregion
@@ -361,7 +286,7 @@ namespace Rhino.Files.Storage
 
         public MessageBookmark GetSentMessageBookmarkAtPosition(int positionFromNewestSentMessage)
         {
-            return Directory.EnumerateFiles(_outgoingHistoryPath, "*.*")
+            return Directory.EnumerateFiles(_outgoingHistoryPath)
                 .OrderByDescending(x => x)
                 .Skip(positionFromNewestSentMessage)
                 .Select(x => new MessageBookmark { Bookmark = x })
@@ -370,108 +295,79 @@ namespace Rhino.Files.Storage
 
         public IEnumerable<PersistentMessageToSend> GetSentMessages(int? batchSize = null)
         {
-            return null;
-            //Api.MoveBeforeFirst(session, _outgoingHistoryPath);
-
-            //int count = 0;
-            //while (Api.TryMoveNext(session, outgoingHistory) && count++ != batchSize)
-            //{
-            //    var address = Api.RetrieveColumnAsString(session, outgoingHistory, ColumnsInformation.OutgoingHistoryColumns["address"]);
-            //    var port = Api.RetrieveColumnAsInt32(session, outgoingHistory, ColumnsInformation.OutgoingHistoryColumns["port"]).Value;
-
-            //    var bookmark = new MessageBookmark();
-            //    Api.JetGetBookmark(session, outgoingHistory, bookmark.Bookmark, bookmark.Size, out bookmark.Size);
-
-            //    yield return new PersistentMessageToSend
-            //    {
-            //        Id = new MessageId
-            //        {
-            //            SourceInstanceId = instanceId,
-            //            MessageIdentifier = new Guid(Api.RetrieveColumn(session, outgoingHistory, ColumnsInformation.OutgoingHistoryColumns["msg_id"]))
-            //        },
-            //        OutgoingStatus = (OutgoingMessageStatus)Api.RetrieveColumnAsInt32(session, outgoingHistory, ColumnsInformation.OutgoingHistoryColumns["send_status"]).Value,
-            //        Endpoint = new Endpoint(address, port),
-            //        Queue = Api.RetrieveColumnAsString(session, outgoingHistory, ColumnsInformation.OutgoingHistoryColumns["queue"], Encoding.Unicode),
-            //        SubQueue = Api.RetrieveColumnAsString(session, outgoingHistory, ColumnsInformation.OutgoingHistoryColumns["subqueue"], Encoding.Unicode),
-            //        SentAt = DateTime.FromOADate(Api.RetrieveColumnAsDouble(session, outgoingHistory, ColumnsInformation.OutgoingHistoryColumns["sent_at"]).Value),
-            //        Data = Api.RetrieveColumn(session, outgoingHistory, ColumnsInformation.OutgoingHistoryColumns["data"]),
-            //        Bookmark = bookmark
-            //    };
-            //}
+            var query = Directory.EnumerateFiles(_outgoingHistoryPath)
+                .OrderBy(x => x)
+                .Select(x =>
+                {
+                    var obj = JsonConvert.DeserializeObject<Outgoing>(File.ReadAllText(x));
+                    return new PersistentMessageToSend
+                    {
+                        Id = new MessageId
+                        {
+                            SourceInstanceId = _instanceId,
+                            MessageIdentifier = obj.msgId,
+                        },
+                        OutgoingStatus = FileUtil.ParseExtension<OutgoingMessageStatus>(x),
+                        Endpoint = obj.address,
+                        Queue = obj.queue,
+                        SubQueue = obj.subqueue,
+                        SentAt = obj.sentAt,
+                        Data = obj.data,
+                        Bookmark = new MessageBookmark { Bookmark = x }
+                    };
+                });
+            return (batchSize == null ? query : query.Take(batchSize.Value));
         }
 
         public void DeleteMessageToSendHistoric(MessageBookmark bookmark)
         {
-            //Api.JetGotoBookmark(session, _outgoingHistoryPath, bookmark.Bookmark, bookmark.Size);
-            //Api.JetDelete(session, outgoingHistory);
+            if (bookmark.Bookmark.StartsWith(_outgoingHistoryPath))
+                File.Delete(bookmark.Bookmark);
         }
 
         #endregion
 
         public int GetNumberOfMessages(string queueName)
         {
-            //Api.JetSetCurrentIndex(session, queues, "pk");
-            //Api.MakeKey(session, queues, queueName, Encoding.Unicode, MakeKeyGrbit.NewKey);
-
-            //if (Api.TrySeek(session, queues, SeekGrbit.SeekEQ) == false)
-            //    return -1;
-
-            var bytes = new byte[4];
-            //var zero = BitConverter.GetBytes(0);
-            //int actual;
-            //Api.JetEscrowUpdate(session, queues, ColumnsInformation.QueuesColumns["number_of_messages"], zero, zero.Length, bytes, bytes.Length, out actual, EscrowUpdateGrbit.None);
-            return BitConverter.ToInt32(bytes, 0);
+            var path = Path.Combine(_database, queueName);
+            if (!Directory.Exists(path))
+                return -1;
+            return Directory.GetFiles(path).Count();
         }
 
         #region Recieved
 
         public IEnumerable<MessageId> GetAlreadyReceivedMessageIds()
         {
-            return Directory.EnumerateFiles(_receivedPath, "*")
+            if (!Directory.Exists(_receivedPath))
+                return Enumerable.Empty<MessageId>();
+            return Directory.EnumerateFiles(_receivedPath)
                 .OrderBy(x => x)
-                .Select(x =>
-                {
-                    var parts = Path.GetFileNameWithoutExtension(x).Split('+');
-                    return new MessageId
-                    {
-                        SourceInstanceId = new Guid(parts[1]),
-                        MessageIdentifier = new Guid(parts[2]),
-                    };
-                });
+                .Select(x => FileUtil.ToMessageId(x));
         }
 
         public void MarkReceived(MessageId id)
         {
-            if (Directory.Exists(_receivedPath))
+            if (!Directory.Exists(_receivedPath))
                 Directory.CreateDirectory(_receivedPath);
-            var path = Path.Combine(_recoveryPath, DateTime.Now.Ticks.ToString("X16") + "+" + id.SourceInstanceId.ToString() + "+" + id.MessageIdentifier.ToString());
-            using (var s = File.CreateText(path))
-            {
-                s.Write("NA");
-                s.Flush();
-            }
+            var path = Path.Combine(_receivedPath, FileUtil.FromMessageId(id, null));
+            File.WriteAllText(path, ".");
         }
 
         public IEnumerable<MessageId> DeleteOldestReceivedMessageIds(int numberOfItemsToKeep, int numberOfItemsToDelete)
         {
-            return Directory.EnumerateFiles(_receivedPath, "*")
+            return Directory.EnumerateFiles(_receivedPath)
                 .OrderByDescending(x => x)
                 .Skip(numberOfItemsToKeep)
                 .Take(numberOfItemsToDelete)
                 .Select(x =>
                 {
                     File.Delete(x);
-                    var parts = Path.GetFileNameWithoutExtension(x).Split('+');
-                    return new MessageId
-                    {
-                        SourceInstanceId = new Guid(parts[1]),
-                        MessageIdentifier = new Guid(parts[2]),
-                    };
+                    return FileUtil.ToMessageId(x);
                 });
         }
 
         #endregion
-
     }
 }
 

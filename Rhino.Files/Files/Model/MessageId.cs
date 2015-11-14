@@ -1,5 +1,6 @@
 using Rhino.Files.Utils;
 using System;
+using System.IO;
 
 namespace Rhino.Files.Model
 {

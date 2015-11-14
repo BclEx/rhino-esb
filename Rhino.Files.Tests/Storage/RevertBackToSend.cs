@@ -33,11 +33,7 @@ namespace Rhino.Files.Tests.Storage
                 qf.Global(actions =>
                 {
                     var transactionId = Guid.NewGuid();
-                    actions.RegisterToSend("localhost",
-                        "test",
-                        null,
-                        testMessage,
-                        transactionId);
+                    actions.RegisterToSend("localhost", "test", null, testMessage, transactionId);
                     actions.MarkAsReadyToSend(transactionId);
                     actions.Commit();
                 });

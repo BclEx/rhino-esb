@@ -34,20 +34,15 @@ namespace Rhino.Files.Storage
 
             string queue = null;
             var messages = new List<PersistentMessage>();
-
-            var items = Directory.EnumerateFiles(_outgoingPath)
-                .OrderBy(x => x)
-                .Select(x => new Tuple<string, Outgoing>(x, JsonConvert.DeserializeObject<Outgoing>(File.ReadAllText(x))));
-            foreach (var item in items)
+            foreach (var path in Directory.EnumerateFiles(_outgoingPath, FileUtil.SearchMessageId(null, OutgoingMessageStatus.Ready.ToString())).OrderBy(x => x))
             {
-                var path = item.Item1;
-                var obj = item.Item2;
+                var obj = JsonConvert.DeserializeObject<Outgoing>(File.ReadAllText(path));
                 var msgId = obj.msgId;
-                var value = (OutgoingMessageStatus)Enum.Parse(typeof(OutgoingMessageStatus), Path.GetExtension(path));
+                var status = FileUtil.ParseExtension<OutgoingMessageStatus>(path);
                 var time = obj.timeToSend;
 
-                _logger.DebugFormat("Scanning message {0} with status {1} to be sent at {2}", msgId, value, time);
-                if (value != OutgoingMessageStatus.Ready)
+                _logger.DebugFormat("Scanning message {0} with status {1} to be sent at {2}", msgId, status, time);
+                if (status != OutgoingMessageStatus.Ready)
                     continue;
 
                 // Check if the message has expired, and move it to the outgoing history.
@@ -87,10 +82,8 @@ namespace Rhino.Files.Storage
                 if (queue != rowQueue)
                     continue;
 
-                var bookmark = new MessageBookmark { }; //Bookmark = obj.bookmark };
-
+                var bookmark = new MessageBookmark { Bookmark = FileUtil.MoveExtension(path, OutgoingMessageStatus.InFlight.ToString()) };
                 _logger.DebugFormat("Adding message {0} to returned messages", msgId);
-                var headerAsQueryString = obj.headers;
                 messages.Add(new PersistentMessage
                 {
                     Id = new MessageId
@@ -98,20 +91,14 @@ namespace Rhino.Files.Storage
                         SourceInstanceId = _instanceId,
                         MessageIdentifier = msgId
                     },
-                    Headers = HttpUtility.ParseQueryString(headerAsQueryString),
+                    Headers = HttpUtility.ParseQueryString(obj.headers),
                     Queue = rowQueue,
                     SubQueue = obj.subqueue,
                     SentAt = obj.sentAt,
                     Data = obj.data,
                     Bookmark = bookmark
                 });
-
-                var newExtension = "." + OutgoingMessageStatus.InFlight.ToString();
-                var newPath = path.Substring(0, path.Length - Path.GetExtension(path).Length) + newExtension;
-                File.Move(path, newPath);
-
                 _logger.DebugFormat("Marking output message {0} as InFlight", msgId);
-
                 if (maxNumberOfMessage < messages.Count)
                     break;
                 if (maxSizeOfMessagesInTotal < messages.Sum(x => x.Data.Length))
@@ -122,53 +109,36 @@ namespace Rhino.Files.Storage
 
         public void MarkOutgoingMessageAsFailedTransmission(MessageBookmark bookmark, bool queueDoesNotExistsInDestination)
         {
-            //Api.JetGotoBookmark(session, outgoing, bookmark.Bookmark, bookmark.Size);
-            //var numOfRetries = Api.RetrieveColumnAsInt32(session, outgoing, ColumnsInformation.OutgoingColumns["number_of_retries"]).Value;
-            //var msgId = new Guid(Api.RetrieveColumn(session, outgoing, ColumnsInformation.OutgoingColumns["msg_id"]));
-
-            //if (numOfRetries < 100 && queueDoesNotExistsInDestination == false)
-            //{
-            //    using (var update = new Update(session, outgoing, JET_prep.Replace))
-            //    {
-            //        var timeToSend = DateTime.Now.AddSeconds(numOfRetries * numOfRetries);
-
-
-            //        Api.SetColumn(session, outgoing, ColumnsInformation.OutgoingColumns["send_status"], (int)OutgoingMessageStatus.Ready);
-            //        Api.SetColumn(session, outgoing, ColumnsInformation.OutgoingColumns["time_to_send"],
-            //                      timeToSend.ToOADate());
-            //        Api.SetColumn(session, outgoing, ColumnsInformation.OutgoingColumns["number_of_retries"],
-            //                      numOfRetries + 1);
-
-            //        logger.DebugFormat("Marking outgoing message {0} as failed with retries: {1}",
-            //                           msgId, numOfRetries);
-
-            //        update.Save();
-            //    }
-            //}
-            //else
-            //{
-            //    MoveFailedMessageToOutgoingHistory(numOfRetries, msgId);
-            //}
+            var path = bookmark.Bookmark;
+            if (!path.StartsWith(_outgoingPath) && !File.Exists(path))
+                return;
+            var obj = JsonConvert.DeserializeObject<Outgoing>(File.ReadAllText(path));
+            var numOfRetries = obj.numberOfRetries;
+            var msgId = obj.msgId;
+            if (numOfRetries < 100 && !queueDoesNotExistsInDestination)
+            {
+                var timeToSend = DateTime.Now.AddSeconds(numOfRetries * numOfRetries);
+                obj.timeToSend = timeToSend;
+                obj.numberOfRetries++;
+                File.WriteAllText(path, JsonConvert.SerializeObject(obj));
+                bookmark.Bookmark = FileUtil.MoveExtension(path, OutgoingMessageStatus.Ready.ToString());
+                _logger.DebugFormat("Marking outgoing message {0} as failed with retries: {1}", msgId, numOfRetries);
+            }
+            else
+                MoveFailedMessageToOutgoingHistory(path, numOfRetries, msgId);
         }
 
         public MessageBookmark MarkOutgoingMessageAsSuccessfullySent(MessageBookmark bookmark)
         {
-            //Api.JetGotoBookmark(session, outgoing, bookmark.Bookmark, bookmark.Size);
-            var newBookmark = new MessageBookmark();
-            //using (var update = new Update(session, _outgoingHistoryPath, JET_prep.Insert))
-            //{
-            //    foreach (var column in ColumnsInformation.OutgoingColumns.Keys)
-            //    {
-            //        var bytes = Api.RetrieveColumn(session, outgoing, ColumnsInformation.OutgoingColumns[column]);
-            //        Api.SetColumn(session, outgoingHistory, ColumnsInformation.OutgoingHistoryColumns[column], bytes);
-            //    }
-            //    Api.SetColumn(session, outgoingHistory, ColumnsInformation.OutgoingHistoryColumns["send_status"], (int)OutgoingMessageStatus.Sent);
-
-            //    update.Save(newBookmark.Bookmark, newBookmark.Size, out newBookmark.Size);
-            //}
-            //var msgId = new Guid(Api.RetrieveColumn(session, outgoing, ColumnsInformation.OutgoingColumns["msg_id"]));
-            //Api.JetDelete(session, outgoing);
-            //_logger.DebugFormat("Successfully sent output message {0}", msgId);
+            var path = bookmark.Bookmark;
+            if (!path.StartsWith(_outgoingPath))
+                return null;
+            if (!Directory.Exists(_outgoingHistoryPath))
+                Directory.CreateDirectory(_outgoingHistoryPath);
+            //var obj = JsonConvert.DeserializeObject<Outgoing>(File.ReadAllText(path));
+            var msgId = "msgId"; //obj.msgId;
+            var newBookmark = new MessageBookmark { Bookmark = FileUtil.MoveBase(path, _outgoingPath, _outgoingHistoryPath, OutgoingMessageStatus.Sent.ToString()) };
+            _logger.DebugFormat("Successfully sent output message {0}", msgId);
             return newBookmark;
         }
 
@@ -181,71 +151,54 @@ namespace Rhino.Files.Storage
 
         public IEnumerable<PersistentMessageToSend> GetMessagesToSend()
         {
-            return null;
-            //Api.MoveBeforeFirst(session, outgoing);
-
-            //while (Api.TryMoveNext(session, outgoing))
-            //{
-            //    var address = Api.RetrieveColumnAsString(session, outgoing, ColumnsInformation.OutgoingColumns["address"]);
-            //    var port = Api.RetrieveColumnAsInt32(session, outgoing, ColumnsInformation.OutgoingColumns["port"]).Value;
-
-            //    var bookmark = new MessageBookmark();
-            //    Api.JetGetBookmark(session, outgoing, bookmark.Bookmark, bookmark.Size, out bookmark.Size);
-
-            //    yield return new PersistentMessageToSend
-            //    {
-            //        Id = new MessageId
-            //        {
-            //            SourceInstanceId = instanceId,
-            //            MessageIdentifier = new Guid(Api.RetrieveColumn(session, outgoing, ColumnsInformation.OutgoingColumns["msg_id"]))
-            //        },
-            //        OutgoingStatus = (OutgoingMessageStatus)Api.RetrieveColumnAsInt32(session, outgoing, ColumnsInformation.OutgoingColumns["send_status"]).Value,
-            //        Endpoint = new Endpoint(address, port),
-            //        Queue = Api.RetrieveColumnAsString(session, outgoing, ColumnsInformation.OutgoingColumns["queue"], Encoding.Unicode),
-            //        SubQueue = Api.RetrieveColumnAsString(session, outgoing, ColumnsInformation.OutgoingColumns["subqueue"], Encoding.Unicode),
-            //        SentAt = DateTime.FromOADate(Api.RetrieveColumnAsDouble(session, outgoing, ColumnsInformation.OutgoingColumns["sent_at"]).Value),
-            //        Data = Api.RetrieveColumn(session, outgoing, ColumnsInformation.OutgoingColumns["data"]),
-            //        Bookmark = bookmark
-            //    };
-            //}
+            if (!Directory.Exists(_outgoingPath))
+                return Enumerable.Empty<PersistentMessageToSend>();
+            return Directory.EnumerateFiles(_outgoingPath)
+                .Select(x =>
+                {
+                    var obj = JsonConvert.DeserializeObject<Outgoing>(File.ReadAllText(x));
+                    return new PersistentMessageToSend
+                    {
+                        Id = new MessageId
+                        {
+                            SourceInstanceId = _instanceId,
+                            MessageIdentifier = obj.msgId,
+                        },
+                        OutgoingStatus = FileUtil.ParseExtension<OutgoingMessageStatus>(x),
+                        Endpoint = obj.address,
+                        Queue = obj.queue,
+                        SubQueue = obj.subqueue,
+                        SentAt = obj.sentAt,
+                        Data = obj.data,
+                        Bookmark = new MessageBookmark { Bookmark = x },
+                    };
+                });
         }
 
         public void RevertBackToSend(MessageBookmark[] bookmarks)
         {
-            //foreach (var bookmark in bookmarks)
-            //{
-            //    Api.JetGotoBookmark(session, _outgoingHistoryPath, bookmark.Bookmark, bookmark.Size);
-            //    var msgId = new Guid(Api.RetrieveColumn(session, _outgoingHistoryPath, ColumnsInformation.OutgoingColumns["msg_id"]));
+            foreach (var bookmark in bookmarks)
+            {
+                var path = bookmark.Bookmark;
+                if (!path.StartsWith(_outgoingHistoryPath))
+                    return;
 
-            //    using (var update = new Update(session, outgoing, JET_prep.Insert))
-            //    {
-            //        foreach (var column in ColumnsInformation.OutgoingColumns.Keys)
-            //        {
-            //            Api.SetColumn(session, outgoing, ColumnsInformation.OutgoingColumns[column],
-            //                Api.RetrieveColumn(session, _outgoingHistoryPath, ColumnsInformation.OutgoingHistoryColumns[column])
-            //                );
-            //        }
-            //        Api.SetColumn(session, outgoing, ColumnsInformation.OutgoingColumns["send_status"],
-            //            (int)OutgoingMessageStatus.Ready);
-            //        Api.SetColumn(session, outgoing, ColumnsInformation.OutgoingColumns["number_of_retries"],
-            //            Api.RetrieveColumnAsInt32(session, outgoingHistory, ColumnsInformation.OutgoingHistoryColumns["number_of_retries"]).Value + 1
-            //               );
-
-            //        logger.DebugFormat("Reverting output message {0} back to Ready mode", msgId);
-
-            //        update.Save();
-            //    }
-            //    Api.JetDelete(session, _outgoingHistoryPath);
-            //}
+                var obj = JsonConvert.DeserializeObject<Outgoing>(File.ReadAllText(path));
+                var msgId = obj.msgId;
+                obj.numberOfRetries++;
+                _logger.DebugFormat("Reverting output message {0} back to Ready mode", msgId);
+                File.WriteAllText(path, JsonConvert.SerializeObject(obj));
+                bookmark.Bookmark = FileUtil.MoveBase(path, _outgoingHistoryPath, _outgoingPath, OutgoingMessageStatus.Ready.ToString());
+            }
         }
 
         private void MoveFailedMessageToOutgoingHistory(string path, int numOfRetries, Guid msgId)
         {
             if (_configuration.EnableOutgoingMessageHistory)
             {
-                var newExtension = "." + OutgoingMessageStatus.Failed.ToString();
-                var newPath = _outgoingHistoryPath + Path.GetFileNameWithoutExtension(path) + newExtension;
-                File.Move(path, newPath);
+                if (!Directory.Exists(_outgoingHistoryPath))
+                    Directory.CreateDirectory(_outgoingHistoryPath);
+                FileUtil.MoveBase(path, _outgoingHistoryPath, OutgoingMessageStatus.Failed.ToString());
                 _logger.DebugFormat("Marking outgoing message {0} as permenantly failed after {1} retries", msgId, numOfRetries);
             }
             else

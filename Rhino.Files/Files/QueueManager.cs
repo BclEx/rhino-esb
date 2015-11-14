@@ -578,7 +578,7 @@ namespace Rhino.Files
                     _queueStorage.Global(actions =>
                     {
                         foreach (var bookmark in _bookmarks)
-                            actions.GetQueue(bookmark.QueueName).Discard(bookmark);
+                            actions.GetQueue(bookmark.QueueName).Delete(bookmark);
                         actions.Commit();
                     });
                 }

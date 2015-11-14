@@ -17,7 +17,7 @@ namespace Rhino.Files.Storage
         {
             _configuration = configuration;
             _database = (!Path.IsPathRooted(database) ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, database) : database);
-            _instanceId = new Guid();
+            _instanceId = Guid.Empty;
         }
 
         #region Dispose

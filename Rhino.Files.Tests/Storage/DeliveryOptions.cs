@@ -9,6 +9,12 @@ namespace Rhino.Files.Tests.Storage
 {
     public class DeliveryOptions
     {
+        public DeliveryOptions()
+        {
+            if (Directory.Exists("test.esent"))
+                Directory.Delete("test.esent", true);
+        }
+
         [Fact]
         public void MovesExpiredMessageToOutgoingHistory()
         {
@@ -30,7 +36,7 @@ namespace Rhino.Files.Tests.Storage
                 var messageId = Guid.Empty;
                 qf.Global(actions =>
                 {
-                    Guid transactionId = Guid.NewGuid();
+                    var transactionId = Guid.NewGuid();
                     messageId = actions.RegisterToSend("localhost", "test", null, testMessage, transactionId);
                     actions.MarkAsReadyToSend(transactionId);
                     actions.Commit();
@@ -46,7 +52,7 @@ namespace Rhino.Files.Tests.Storage
                 {
                     var message = actions.GetSentMessages().FirstOrDefault(x => x.Id.MessageIdentifier == messageId);
                     Assert.NotNull(message);
-                    //Assert.Equal(OutgoingMessageStatus.Failed, message.OutgoingStatus);
+                    Assert.Equal(OutgoingMessageStatus.Failed, message.OutgoingStatus);
                     actions.Commit();
                 });
             }
@@ -55,7 +61,6 @@ namespace Rhino.Files.Tests.Storage
         [Fact]
         public void MovesMessageToOutgoingHistoryAfterMaxAttempts()
         {
-            Directory.Delete("test.esent", true);
             using (var qf = new QueueStorage("test.esent", new QueueManagerConfiguration()))
             {
                 qf.Initialize();
@@ -74,12 +79,8 @@ namespace Rhino.Files.Tests.Storage
                 var messageId = Guid.Empty;
                 qf.Global(actions =>
                 {
-                    Guid transactionId = Guid.NewGuid();
-                    messageId = actions.RegisterToSend("localhost",
-                        "test",
-                        null,
-                        testMessage,
-                        transactionId);
+                    var transactionId = Guid.NewGuid();
+                    messageId = actions.RegisterToSend("localhost", "test", null, testMessage, transactionId);
                     actions.MarkAsReadyToSend(transactionId);
                     actions.Commit();
                 });
@@ -88,7 +89,6 @@ namespace Rhino.Files.Tests.Storage
                     string endpoint;
                     var msgs = actions.GetMessagesToSendAndMarkThemAsInFlight(int.MaxValue, int.MaxValue, out endpoint);
                     actions.MarkOutgoingMessageAsFailedTransmission(msgs.First().Bookmark, false);
-
                     msgs = actions.GetMessagesToSendAndMarkThemAsInFlight(int.MaxValue, int.MaxValue, out endpoint);
                     Assert.Empty(msgs);
                     actions.Commit();
@@ -97,7 +97,7 @@ namespace Rhino.Files.Tests.Storage
                 {
                     var message = actions.GetSentMessages().FirstOrDefault(x => x.Id.MessageIdentifier == messageId);
                     Assert.NotNull(message);
-                    //Assert.Equal(OutgoingMessageStatus.Failed, message.OutgoingStatus);
+                    Assert.Equal(OutgoingMessageStatus.Failed, message.OutgoingStatus);
                     actions.Commit();
                 });
             }
