@@ -119,12 +119,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Files\Internal\ResourceSession.cs" />
     <Compile Include="Files\Protocol\ProtocolConstants.cs" />
     <Compile Include="Files\Protocol\Sender.cs" />
     <Compile Include="Files\Protocol\IMessageAcceptance.cs" />
     <Compile Include="Files\Protocol\Receiver.cs" />
     <Compile Include="Files\Protocol\SerializationExtensions.cs" />
     <Compile Include="Files\Protocol\StreamUtil.cs" />
+    <Compile Include="Files\Internal\ResourceTransaction.cs" />
     <Compile Include="Files\Storage\AbstractActions.cs" />
     <Compile Include="Files\Storage\OutgoingMessageStatus.cs" />
     <Compile Include="Files\Storage\QueueActions.cs" />
@@ -132,6 +134,7 @@
     <Compile Include="Files\Storage\GlobalActions.cs" />
     <Compile Include="Files\Storage\QueueStorage.cs" />
     <Compile Include="Files\Storage\FileUtil.cs" />
+    <Compile Include="Files\Internal\ResourceBase.cs" />
     <Compile Include="Files\Utils\MonoHttpEncoder.cs" />
     <Compile Include="Files\Utils\MonoHttpUtility.cs" />
     <Compile Include="FileWatch\AcceptAsyncResult.cs" />

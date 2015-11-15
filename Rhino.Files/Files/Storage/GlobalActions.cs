@@ -91,14 +91,14 @@ namespace Rhino.Files.Storage
             public string bookmark { get; set; }
             public int valueToRestore { get; set; }
             public string queue { get; set; }
-            public string subqueue { get; set; }
+            public string subQueue { get; set; }
         }
 
         public void RegisterUpdateToReverse(Guid txId, MessageBookmark bookmark, MessageStatus statusToRestore, string subQueue)
         {
             if (!Directory.Exists(_txsPath))
                 Directory.CreateDirectory(_txsPath);
-            var path = Path.Combine(_txsPath, Path.GetFileName(bookmark.Bookmark));
+            var path = Path.Combine(_txsPath, FileUtil.FromTransactionId(txId, null));
             if (File.Exists(path))
                 File.Delete(path);
             var obj = new Tx
@@ -107,7 +107,7 @@ namespace Rhino.Files.Storage
                 bookmark = bookmark.Bookmark,
                 valueToRestore = (int)statusToRestore,
                 queue = bookmark.QueueName,
-                subqueue = subQueue,
+                subQueue = subQueue,
             };
             File.WriteAllText(path, JsonConvert.SerializeObject(obj));
         }
@@ -253,7 +253,7 @@ namespace Rhino.Files.Storage
             {
                 var obj = JsonConvert.DeserializeObject<Tx>(x);
                 var oldStatus = (MessageStatus)obj.valueToRestore;
-                var subqueue = obj.subqueue;
+                var subqueue = obj.subQueue;
                 var actions = GetQueue(obj.queue);
                 var bookmark = new MessageBookmark { Bookmark = obj.bookmark, QueueName = obj.queue };
                 switch (actions.GetMessageStatus(bookmark))

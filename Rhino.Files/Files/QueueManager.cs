@@ -63,7 +63,7 @@ namespace Rhino.Files
         static TransactionEnlistment Enlistment;
 
         [ThreadStatic]
-        static Transaction CurrentlyEnslistedTransaction;
+        static System.Transactions.Transaction CurrentlyEnslistedTransaction;
 
         volatile bool _wasStarted;
         volatile bool _wasDisposed;
@@ -461,7 +461,7 @@ namespace Rhino.Files
                         return message;
 
                     var sp = Stopwatch.StartNew();
-                    if (Monitor.Wait(_newMessageArrivedLock, remaining) == false)
+                    if (!Monitor.Wait(_newMessageArrivedLock, remaining))
                         throw new TimeoutException("No message arrived in the specified timeframe " + timeout);
                     remaining = Max(TimeSpan.Zero, remaining - sp.Elapsed);
                 }

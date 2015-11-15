@@ -1,8 +1,8 @@
-﻿using Common.Logging;
-using Rhino.Files.Exceptions;
-using Rhino.Files.Model;
+﻿using Rhino.Files.Exceptions;
+using Rhino.Files.Internal;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -13,15 +13,31 @@ namespace Rhino.Files.Storage
         readonly Dictionary<string, QueueActions> _queuesByName = new Dictionary<string, QueueActions>();
         protected readonly string _database;
         protected readonly Guid _instanceId;
+        protected ResourceSession _session;
+        protected ResourceTransaction _transaction;
 
         public AbstractActions(string database, Guid instanceId)
         {
             _database = database;
             _instanceId = instanceId;
+            try
+            {
+                _session = new ResourceSession(instanceId);
+                _transaction = new ResourceTransaction(_session);
+            }
+            catch (Exception) { Dispose(); throw; }
         }
 
         public void Dispose()
         {
+            try
+            {
+                foreach (var action in _queuesByName.Values)
+                    action.Dispose();
+                if (_transaction != null)
+                    _transaction.Dispose();
+            }
+            catch (Exception e) { Trace.WriteLine(e.ToString()); Debugger.Break(); }
         }
 
         public QueueActions GetQueue(string queueName)
@@ -57,6 +73,7 @@ namespace Rhino.Files.Storage
 
         public void Commit()
         {
+            _transaction.Commit();
         }
     }
 }

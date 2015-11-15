@@ -1,11 +1,12 @@
 ﻿using Common.Logging;
 using System;
 using System.IO;
+using System.Runtime.ConstrainedExecution;
 using System.Threading;
 
 namespace Rhino.Files.Storage
 {
-    public class QueueStorage : IDisposable
+    public class QueueStorage : CriticalFinalizerObject, IDisposable
     {
         readonly ILog _log = LogManager.GetLogger(typeof(QueueStorage));
         readonly QueueManagerConfiguration _configuration;
@@ -17,7 +18,7 @@ namespace Rhino.Files.Storage
         {
             _configuration = configuration;
             _database = (!Path.IsPathRooted(database) ? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, database) : database);
-            _instanceId = Guid.Empty;
+            _instanceId = Guid.NewGuid();
         }
 
         #region Dispose
@@ -56,6 +57,21 @@ namespace Rhino.Files.Storage
                 catch (Exception e) { _log.Error("Could not dispose of queue storage properly", e); throw; }
             }
             finally { _usageLock.ExitWriteLock(); }
+        }
+
+        ~QueueStorage()
+        {
+            try { _log.Warn("Disposing esent resources from finalizer! You should call QueueStorage.Dispose() instead!"); }
+            catch (Exception exception)
+            {
+                try
+                {
+                    _log.Error("Failed to dispose esent instance from finalizer, trying abrupt termination.", exception);
+                    try { }
+                    catch (Exception e) { _log.Error("Could not dispose instance abruptly", e); }
+                }
+                catch { }
+            }
         }
 
         #endregion
