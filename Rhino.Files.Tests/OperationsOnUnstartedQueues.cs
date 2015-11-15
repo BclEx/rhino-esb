@@ -17,19 +17,19 @@ namespace Rhino.Files.Tests
                 Directory.Delete("test.esent", true);
             if (Directory.Exists("test2.esent"))
                 Directory.Delete("test2.esent", true);
-            _sender = new QueueManager("Loopback", "test.esent");
+            _sender = new QueueManager("localhost", "test.esent");
             _sender.Start();
             using (var tx = new TransactionScope())
             {
                 _sender.Send(
-                    new Uri("files://localhost:23457/h"),
+                    new Uri("files://localhost/h"),
                     new MessagePayload
                     {
                         Data = new byte[] { 6, 7, 8, 9 }
                     });
                 tx.Complete();
             }
-            _receiver = new QueueManager("Loopback", "test2.esent");
+            _receiver = new QueueManager("localhost", "test2.esent");
             _receiver.CreateQueues("h", "a");
             var wait = new ManualResetEvent(false);
             Action<object, MessageEventArgs> handler = (s, e) => wait.Set();
@@ -42,8 +42,8 @@ namespace Rhino.Files.Tests
             _sender.Dispose();
             _receiver.Dispose();
 
-            _sender = new QueueManager("Loopback", "test.esent");
-            _receiver = new QueueManager("Loopback", "test2.esent");
+            _sender = new QueueManager("localhost", "test.esent");
+            _receiver = new QueueManager("localhost", "test2.esent");
             _receiver.CreateQueues("h", "a");
         }
 
@@ -53,8 +53,8 @@ namespace Rhino.Files.Tests
                 Directory.Delete("test.esent", true);
             if (Directory.Exists("test2.esent"))
                 Directory.Delete("test2.esent", true);
-            _sender = new QueueManager("Loopback", "test.esent");
-            _receiver = new QueueManager("Loopback", "test2.esent");
+            _sender = new QueueManager("localhost", "test.esent");
+            _receiver = new QueueManager("localhost", "test2.esent");
             _receiver.CreateQueues("h", "a");
         }
 
@@ -66,7 +66,7 @@ namespace Rhino.Files.Tests
             using (var tx = new TransactionScope())
             {
                 _sender.Send(
-                    new Uri("rhino.queues://localhost:23457/h"),
+                    new Uri("file://localhost/h"),
                     new MessagePayload
                     {
                         Data = new byte[] { 1, 2, 4, 5 }

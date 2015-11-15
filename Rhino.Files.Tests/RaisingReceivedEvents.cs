@@ -31,7 +31,7 @@ namespace Rhino.Files.Tests
             if (Directory.Exists(TEST_QUEUE_1))
                 Directory.Delete(TEST_QUEUE_1, true);
 
-            _lastCreatedSender = new QueueManager("Loopback", TEST_QUEUE_1);
+            _lastCreatedSender = new QueueManager("localhost", TEST_QUEUE_1);
             _lastCreatedSender.Start();
             return _lastCreatedSender;
         }
@@ -45,7 +45,7 @@ namespace Rhino.Files.Tests
             if (Directory.Exists(TEST_QUEUE_2))
                 Directory.Delete(TEST_QUEUE_2, true);
 
-            _lastCreatedReceiver = new QueueManager("Loopback", TEST_QUEUE_2);
+            _lastCreatedReceiver = new QueueManager("localhost", TEST_QUEUE_2);
             _lastCreatedReceiver.CreateQueues("h", "b");
             _lastCreatedReceiver.Start();
             ResetEventRecorder();

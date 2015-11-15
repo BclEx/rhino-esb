@@ -19,8 +19,8 @@ namespace Rhino.Files.Storage
         {
             if (id == null)
                 return (extension == null ? "*" : "*." + extension);
-            var firstPattern = (hasTime ? "__________" : "*");
-            return (extension == null ? firstPattern + ".*" : firstPattern + "." + extension);
+            var pattern = (hasTime ? "????????????????_" : string.Empty) + (id.SourceInstanceId != Guid.Empty ? id.SourceInstanceId + "_" : string.Empty) + id.MessageIdentifier;
+            return (extension == null ? pattern + ".*" : pattern + "." + extension);
         }
 
         public static string SearchTransactionId(Guid id, string extension)
@@ -59,7 +59,7 @@ namespace Rhino.Files.Storage
         public static string MoveBase(string path, string oldBase, string newBase, string newExtension)
         {
             // ERROR IF MOVING BETWEEN SIBLINGS - MoveTo(subqueue)
-            var newPath = Path.Combine(newBase, path.Substring(oldBase.Length));
+            var newPath = Path.Combine(newBase, path.Substring(oldBase.Length + 1));
             if (newExtension != null)
                 newPath = NewExtension(newPath, newExtension);
             File.Move(path, newPath);

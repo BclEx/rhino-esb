@@ -21,7 +21,7 @@ namespace Rhino.Files.Tests
         [Fact(Skip = "This is a slow load test")]
         public void CanPurgeLargeSetsOfOldData()
         {
-            _queueManager = new QueueManager("Loopback", EsentFileName);
+            _queueManager = new QueueManager("localhost", EsentFileName);
             _queueManager.Configuration.OldestMessageInOutgoingHistory = TimeSpan.Zero;
             _queueManager.Start();
 

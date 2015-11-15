@@ -17,9 +17,9 @@ namespace Rhino.Files.Tests
                 Directory.Delete("test.esent", true);
             if (Directory.Exists("test2.esent"))
                 Directory.Delete("test2.esent", true);
-            _sender = new QueueManager("Loopback", "test.esent");
+            _sender = new QueueManager("localhost", "test.esent");
             _sender.Start();
-            _receiver = new QueueManager("Loopback", "test2.esent");
+            _receiver = new QueueManager("localhost", "test2.esent");
             _receiver.CreateQueues("h", "a");
             _receiver.Start();
         }

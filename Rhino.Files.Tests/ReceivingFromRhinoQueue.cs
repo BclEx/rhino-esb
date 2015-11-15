@@ -20,7 +20,7 @@ namespace Rhino.Files.Tests
             if (Directory.Exists("test.esent"))
                 Directory.Delete("test.esent", true);
 
-            queueManager = new QueueManager("Loopback", "test.esent");
+            queueManager = new QueueManager("localhost", "test.esent");
             queueManager.CreateQueues("h");
             queueManager.Start();
         }

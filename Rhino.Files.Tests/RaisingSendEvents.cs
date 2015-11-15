@@ -25,7 +25,7 @@ namespace Rhino.Files.Tests
             if (Directory.Exists(TEST_QUEUE_2))
                 Directory.Delete(TEST_QUEUE_2, true);
 
-            var sender = new QueueManager("Loopback", TEST_QUEUE_1);
+            var sender = new QueueManager("localhost", TEST_QUEUE_1);
             sender.Start();
             messageEventArgs = null;
             return sender;
@@ -96,7 +96,7 @@ namespace Rhino.Files.Tests
             {
                 sender.MessageSent += RecordMessageEvent;
 
-                using (var receiver = new QueueManager("Loopback", TEST_QUEUE_2))
+                using (var receiver = new QueueManager("localhost", TEST_QUEUE_2))
                 {
                     receiver.CreateQueues("h");
                     receiver.Start();
@@ -157,7 +157,7 @@ namespace Rhino.Files.Tests
             {
                 sender.MessageSent += RecordMessageEvent;
 
-                using (var receiver = new RevertingQueueManager("Loopback", TEST_QUEUE_2))
+                using (var receiver = new RevertingQueueManager("localhost", TEST_QUEUE_2))
                 {
                     receiver.CreateQueues("h");
                     receiver.Start();

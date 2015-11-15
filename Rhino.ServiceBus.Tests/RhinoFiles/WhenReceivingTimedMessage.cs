@@ -27,7 +27,7 @@ namespace Rhino.ServiceBus.Tests.RhinoFiles
             messageSerializer = new XmlMessageSerializer(new DefaultReflection(),
                 serviceLocator);
             transport = new RhinoFilesTransport(
-                new Uri("file://localhost:23456/q"),
+                new Uri("file://localhost/q"),
                 new EndpointRouter(),
                 messageSerializer,
                 1,

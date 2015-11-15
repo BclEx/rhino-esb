@@ -5,8 +5,8 @@ using System.Transactions;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using Rhino.Mocks;
-using Rhino.Queues;
-using Rhino.Queues.Model;
+using Rhino.Files;
+using Rhino.Files.Model;
 using Rhino.ServiceBus.Impl;
 using Rhino.ServiceBus.Internal;
 using Rhino.ServiceBus.MessageModules;
@@ -21,7 +21,7 @@ namespace Rhino.ServiceBus.Tests.RhinoFiles
         private readonly ITransport transport;
         private readonly IMessageSerializer messageSerializer;
         private readonly QueueManager queue;
-        private readonly Uri logEndpoint = new Uri("file://localhost:2202/log_endpoint");
+        private readonly Uri logEndpoint = new Uri("file://localhost/log_endpoint");
 
         public MessageLoggingTests()
         {
@@ -37,7 +37,7 @@ namespace Rhino.ServiceBus.Tests.RhinoFiles
             container.Register(Component.For<MessageLoggingModule>());
 
             messageSerializer = container.Resolve<IMessageSerializer>();
-            queue = new QueueManager(new IPEndPoint(IPAddress.Any, 2202), path);
+            queue = new QueueManager("localhost", path);
             queue.CreateQueues("log_endpoint");
             queue.Start();
             

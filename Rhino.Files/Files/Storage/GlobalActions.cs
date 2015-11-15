@@ -204,7 +204,7 @@ namespace Rhino.Files.Storage
         {
             if (!Directory.Exists(_outgoingPath))
                 return;
-            foreach (var path in Directory.EnumerateFiles(_outgoingPath, FileUtil.FromTransactionId(transactionId, null)))
+            foreach (var path in Directory.EnumerateFiles(_outgoingPath, FileUtil.SearchTransactionId(transactionId, null)))
             {
                 _logger.DebugFormat("Deleting output message {0}", transactionId);
                 File.Delete(path);
@@ -277,8 +277,7 @@ namespace Rhino.Files.Storage
         {
             if (!Directory.Exists(_queuesPath))
                 return new string[] { };
-            return Directory.EnumerateFiles(_queuesPath)
-                .OrderBy(x => x)
+            return Directory.EnumerateFiles(_queuesPath).OrderBy(x => x)
                 .ToArray();
         }
 
@@ -286,8 +285,7 @@ namespace Rhino.Files.Storage
 
         public MessageBookmark GetSentMessageBookmarkAtPosition(int positionFromNewestSentMessage)
         {
-            return Directory.EnumerateFiles(_outgoingHistoryPath)
-                .OrderByDescending(x => x)
+            return Directory.EnumerateFiles(_outgoingHistoryPath).OrderByDescending(x => x)
                 .Skip(positionFromNewestSentMessage)
                 .Select(x => new MessageBookmark { Bookmark = x })
                 .FirstOrDefault();
@@ -295,8 +293,7 @@ namespace Rhino.Files.Storage
 
         public IEnumerable<PersistentMessageToSend> GetSentMessages(int? batchSize = null)
         {
-            var query = Directory.EnumerateFiles(_outgoingHistoryPath)
-                .OrderBy(x => x)
+            var query = Directory.EnumerateFiles(_outgoingHistoryPath).OrderBy(x => x)
                 .Select(x =>
                 {
                     var obj = JsonConvert.DeserializeObject<Outgoing>(File.ReadAllText(x));
@@ -341,8 +338,7 @@ namespace Rhino.Files.Storage
         {
             if (!Directory.Exists(_receivedPath))
                 return Enumerable.Empty<MessageId>();
-            return Directory.EnumerateFiles(_receivedPath)
-                .OrderBy(x => x)
+            return Directory.EnumerateFiles(_receivedPath).OrderBy(x => x)
                 .Select(x => FileUtil.ToMessageId(x));
         }
 
@@ -356,8 +352,7 @@ namespace Rhino.Files.Storage
 
         public IEnumerable<MessageId> DeleteOldestReceivedMessageIds(int numberOfItemsToKeep, int numberOfItemsToDelete)
         {
-            return Directory.EnumerateFiles(_receivedPath)
-                .OrderByDescending(x => x)
+            return Directory.EnumerateFiles(_receivedPath).OrderByDescending(x => x)
                 .Skip(numberOfItemsToKeep)
                 .Take(numberOfItemsToDelete)
                 .Select(x =>

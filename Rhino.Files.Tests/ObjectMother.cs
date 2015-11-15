@@ -54,7 +54,7 @@ namespace Rhino.Files.Tests
             var directory = string.Format("{0}.esent", name);
             if (Directory.Exists(directory))
                 Directory.Delete(directory, true);
-            var queueManager = new QueueManager("Loopback", directory);
+            var queueManager = new QueueManager("localhost", directory);
             queueManager.CreateQueues(queue);
             return queueManager;
         }

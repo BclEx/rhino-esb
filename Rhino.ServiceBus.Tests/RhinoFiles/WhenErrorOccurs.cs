@@ -35,7 +35,7 @@ namespace Rhino.ServiceBus.Tests.RhinoFiles
             messageSerializer = new ThrowingSerializer(new XmlMessageSerializer(new DefaultReflection(),
                                                       serviceLocator));
             transport = new RhinoFilesTransport(
-                new Uri("file://localhost:23456/q"),
+                new Uri("file://localhost/q"),
                 new EndpointRouter(),
                 messageSerializer,
                 1,
@@ -65,7 +65,7 @@ namespace Rhino.ServiceBus.Tests.RhinoFiles
             var serviceLocator = new CastleServiceLocator(new WindsorContainer());
             messageSerializer = new XmlMessageSerializer(new DefaultReflection(), serviceLocator);
             transport = new RhinoFilesTransport(
-                new Uri("file://localhost:23456/q"),
+                new Uri("file://localhost/q"),
                 new EndpointRouter(),
                 messageSerializer,
                 1,

@@ -17,7 +17,7 @@
 //    public class RecieverFailure
 //    {
 //        private readonly ManualResetEvent wait = new ManualResetEvent(false);
-//        private readonly string endpointToListenTo = "Loopback";
+//        private readonly string endpointToListenTo = "localhost";
 //        private readonly CapturingLoggerFactoryAdapter adapter;
 
 //        public RecieverFailure()
