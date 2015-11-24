@@ -118,7 +118,7 @@ namespace Rhino.Files.Storage
                 return;
             foreach (var path in Directory.EnumerateFiles(_txsPath, FileUtil.SearchTransactionId(transactionId, null)))
             {
-                var obj = JsonConvert.DeserializeObject<Tx>(path);
+                var obj = JsonConvert.DeserializeObject<Tx>(File.ReadAllText(path));
                 var actions = GetQueue(obj.queue);
                 var bookmark = new MessageBookmark { Bookmark = obj.bookmark, QueueName = obj.queue };
                 switch (actions.GetMessageStatus(bookmark))
@@ -251,7 +251,7 @@ namespace Rhino.Files.Storage
                 return;
             foreach (var x in Directory.EnumerateFiles(_txsPath, FileUtil.SearchTransactionId(transactionId, null)))
             {
-                var obj = JsonConvert.DeserializeObject<Tx>(x);
+                var obj = JsonConvert.DeserializeObject<Tx>(File.ReadAllText(x));
                 var oldStatus = (MessageStatus)obj.valueToRestore;
                 var subqueue = obj.subQueue;
                 var actions = GetQueue(obj.queue);

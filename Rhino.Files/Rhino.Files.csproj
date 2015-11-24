@@ -119,6 +119,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Files\Exceptions\ErrorException.cs" />
     <Compile Include="Files\Internal\ResourceSession.cs" />
     <Compile Include="Files\Protocol\ProtocolConstants.cs" />
     <Compile Include="Files\Protocol\Sender.cs" />

@@ -75,7 +75,7 @@ namespace Rhino.Files.Storage
         {
             var path = (string.IsNullOrEmpty(subQueue) ? _msgsPath : Path.Combine(_msgsPath, subQueue));
             if (!Directory.Exists(path))
-                return null;
+                throw new QueueDoesNotExistsException(_queueName);
             return Directory.EnumerateFiles(path, FileUtil.SearchMessageId(null, MessageStatus.ReadyToDeliver.ToString()))
                 .OrderBy(x => x)
                 .Select(x =>
@@ -88,11 +88,11 @@ namespace Rhino.Files.Storage
 
                     var obj = JsonConvert.DeserializeObject<QueueMsg>(File.ReadAllText(x));
                     try { x = FileUtil.MoveExtension(x, MessageStatus.Processing.ToString()); }
-                    catch (Exception)
+                    catch (ErrorException e)
                     {
                         _logger.DebugFormat("Write conflict on '{0}/{1}' for {2}, skipping message", _queueName, subQueue, id);
-                        //if (e.Error == JET_err.WriteConflict)
-                        //    continue;
+                        if (e.Error == ErrorException.ErrorType.WriteConflict)
+                            return null;
                         throw;
                     }
                     var bookmark = new MessageBookmark { Bookmark = x, QueueName = _queueName };

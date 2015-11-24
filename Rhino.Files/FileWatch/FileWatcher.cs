@@ -74,7 +74,6 @@ namespace Rhino.FileWatch
             //        break;
             //}
             //}
-
         }
 
         #endregion

@@ -70,11 +70,12 @@ namespace Rhino.Files.Protocol
                     var filename2 = filename + ".sending";
                     using (var s = File.Create(filename2))
                     {
-                        try { s.BeginWrite(buffer, 0, buffer.Length, ae.End(), null); }
-                        catch (Exception e) { _logger.WarnFormat("Could not write to {0} because {1}", Destination, e); Failure(e); yield break; }
-                        yield return 1;
-                        try { s.EndWrite(ae.DequeueAsyncResult()); }
-                        catch (Exception e) { _logger.WarnFormat("Could not write to {0} because {1}", Destination, e); Failure(e); yield break; }
+                        s.Write(buffer, 0, buffer.Length);
+                        //try { s.BeginWrite(buffer, 0, buffer.Length, ae.End(), null); }
+                        //catch (Exception e) { _logger.WarnFormat("Could not write to {0} because {1}", Destination, e); Failure(e); yield break; }
+                        //yield return 1;
+                        //try { s.EndWrite(ae.DequeueAsyncResult()); }
+                        //catch (Exception e) { _logger.WarnFormat("Could not write to {0} because {1}", Destination, e); Failure(e); yield break; }
                         _logger.DebugFormat("Writing {0} bytes to {1}", buffer.Length, Destination);
                     }
                     try { File.SetCreationTime(filename2, fileDate); }

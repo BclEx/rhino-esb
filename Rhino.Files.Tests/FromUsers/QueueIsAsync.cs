@@ -26,7 +26,7 @@ namespace Rhino.Files.Tests.FromUsers
         [Fact]
         public void CanReceiveFromQueue()
         {
-            for (int i = 0; i < 2; i++)
+            for (var i = 0; i < 2; i++)
             {
                 new Sender
                 {

@@ -79,13 +79,7 @@ namespace Rhino.Files.Protocol
                     }
                     _logger.DebugFormat("Deserialized {0} messages from {1}", messages.Count, sender);
                 }
-                catch (Exception e) { _logger.Warn("Failed to deserialize messages from " + sender, e); }
-
-                IMessageAcceptance acceptance = null;
-                byte[] errorBytes = null;
-                try { acceptance = _acceptMessages(messages.ToArray()); _logger.DebugFormat("All messages from {0} were accepted", sender); }
-                catch (QueueDoesNotExistsException) { _logger.WarnFormat("Failed to accept messages from {0} because queue does not exists", sender); errorBytes = ProtocolConstants.QueueDoesNoExiststBuffer; }
-                catch (Exception e) { errorBytes = ProtocolConstants.ProcessingFailureBuffer; _logger.Warn("Failed to accept messages from " + sender, e); }
+                catch (Exception e) { messages = null; _logger.Warn("Failed to deserialize messages from " + sender, e); }
 
                 //using (var stream = file.GetStream())
                 //{
@@ -113,32 +107,31 @@ namespace Rhino.Files.Protocol
                 //    catch (Exception exception) { _logger.Warn("Failed to deserialize messages from " + remoteEndpoint, exception); }
                 //}
 
-                //if (messages == null)
-                //{
-                //    try { stream.BeginWrite(ProtocolConstants.SerializationFailureBuffer, 0, ProtocolConstants.SerializationFailureBuffer.Length, ae.End(), null); }
-                //    catch (Exception e) { _logger.Warn("Unable to send serialization format error to " + sender, e); yield break; }
-                //    yield return 1;
-                //    try { stream.EndWrite(ae.DequeueAsyncResult()); }
-                //    catch (Exception e) { _logger.Warn("Unable to send serialization format error to " + sender, e); }
+                if (messages == null)
+                {
+                    //try { stream.BeginWrite(ProtocolConstants.SerializationFailureBuffer, 0, ProtocolConstants.SerializationFailureBuffer.Length, ae.End(), null); }
+                    //catch (Exception e) { _logger.Warn("Unable to send serialization format error to " + sender, e); yield break; }
+                    //yield return 1;
+                    //try { stream.EndWrite(ae.DequeueAsyncResult()); }
+                    //catch (Exception e) { _logger.Warn("Unable to send serialization format error to " + sender, e); }
+                    yield break;
+                }
 
-                //    yield break;
-                //}
+                IMessageAcceptance acceptance = null;
+                byte[] errorBytes = null;
+                try { acceptance = _acceptMessages(messages.ToArray()); _logger.DebugFormat("All messages from {0} were accepted", sender); }
+                catch (QueueDoesNotExistsException) { _logger.WarnFormat("Failed to accept messages from {0} because queue does not exists", sender); errorBytes = ProtocolConstants.QueueDoesNoExiststBuffer; }
+                catch (Exception e) { errorBytes = ProtocolConstants.ProcessingFailureBuffer; _logger.Warn("Failed to accept messages from " + sender, e); }
 
-                //IMessageAcceptance acceptance = null;
-                //byte[] errorBytes = null;
-                //try { acceptance = _acceptMessages(messages); _logger.DebugFormat("All messages from {0} were accepted", sender); }
-                ////catch (QueueDoesNotExistsException) { _logger.WarnFormat("Failed to accept messages from {0} because queue does not exists", sender); errorBytes = ProtocolConstants.QueueDoesNoExiststBuffer; }
-                //catch (Exception exception) { errorBytes = ProtocolConstants.ProcessingFailureBuffer; _logger.Warn("Failed to accept messages from " + sender, exception); }
-
-                //if (errorBytes != null)
-                //{
-                //    try { stream.BeginWrite(errorBytes, 0, errorBytes.Length, ae.End(), null); }
-                //    catch (Exception exception) { _logger.Warn("Unable to send processing failure from " + sender, exception); yield break; }
-                //    yield return 1;
-                //    try { stream.EndWrite(ae.DequeueAsyncResult()); }
-                //    catch (Exception exception) { _logger.Warn("Unable to send processing failure from " + sender, exception); }
-                //    yield break;
-                //}
+                if (errorBytes != null)
+                {
+                    //try { stream.BeginWrite(errorBytes, 0, errorBytes.Length, ae.End(), null); }
+                    //catch (Exception exception) { _logger.Warn("Unable to send processing failure from " + sender, exception); yield break; }
+                    //yield return 1;
+                    //try { stream.EndWrite(ae.DequeueAsyncResult()); }
+                    //catch (Exception exception) { _logger.Warn("Unable to send processing failure from " + sender, exception); }
+                    yield break;
+                }
 
                 //_logger.DebugFormat("Sending reciept notice to {0}", sender);
                 //try { stream.BeginWrite(ProtocolConstants.RecievedBuffer, 0, ProtocolConstants.RecievedBuffer.Length, ae.End(), null); }
@@ -185,16 +178,16 @@ namespace Rhino.Files.Protocol
                 //}
 
                 //bool commitSuccessful;
-                //try
-                //{
-                //    acceptance.Commit();
-                //    commitSuccessful = true;
-                //}
-                //catch (Exception exception)
-                //{
-                //    _logger.Warn("Unable to commit messages from " + sender, exception);
-                //    commitSuccessful = false;
-                //}
+                try
+                {
+                    acceptance.Commit();
+                    //commitSuccessful = true;
+                }
+                catch (Exception e)
+                {
+                    _logger.Warn("Unable to commit messages from " + sender, e);
+                    //commitSuccessful = false;
+                }
 
                 //if (!commitSuccessful)
                 //{
@@ -210,7 +203,6 @@ namespace Rhino.Files.Protocol
                 //    }
                 //}
             }
-            catch (Exception e) { }
             finally
             {
                 var copy = CompletedRecievingMessages;

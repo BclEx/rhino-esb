@@ -28,10 +28,16 @@ namespace Rhino.FileWatch
         {
             //if (e.FullPath.EndsWith(".sending"))
             //    return;
-            //WaitSetResult(new FileWatcherFile
+            ////WaitSetResult(new FileWatcherFile
+            ////{
+            ////    EndPoint = _watcher.Path,
+            ////    Paths = new[] { e.FullPath },
+            ////});
+            //SetResult(new FileWatcherFile
             //{
             //    EndPoint = _watcher.Path,
             //    Paths = new[] { e.FullPath },
+            //    Error = FileWatcherError.Success,
             //});
         }
 

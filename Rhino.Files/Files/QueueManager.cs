@@ -63,7 +63,7 @@ namespace Rhino.Files
         static TransactionEnlistment Enlistment;
 
         [ThreadStatic]
-        static System.Transactions.Transaction CurrentlyEnslistedTransaction;
+        static Transaction CurrentlyEnslistedTransaction;
 
         volatile bool _wasStarted;
         volatile bool _wasDisposed;
@@ -764,10 +764,10 @@ namespace Rhino.Files
                         return message;
                     }
                     var sp = Stopwatch.StartNew();
-                    if (Monitor.Wait(_newMessageArrivedLock, remaining) == false)
+                    if (!Monitor.Wait(_newMessageArrivedLock, remaining))
                         throw new TimeoutException("No message arrived in the specified timeframe " + timeout);
                     var newRemaining = remaining - sp.Elapsed;
-                    remaining = newRemaining >= TimeSpan.Zero ? newRemaining : TimeSpan.Zero;
+                    remaining = (newRemaining >= TimeSpan.Zero ? newRemaining : TimeSpan.Zero);
                 }
             }
         }

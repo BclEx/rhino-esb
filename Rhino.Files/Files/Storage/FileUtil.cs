@@ -1,4 +1,5 @@
-﻿using Rhino.Files.Model;
+﻿using Rhino.Files.Exceptions;
+using Rhino.Files.Model;
 using System;
 using System.IO;
 
@@ -79,6 +80,8 @@ namespace Rhino.Files.Storage
         {
             var lastWriteTime = File.GetLastWriteTime(path);
             var newPath = NewExtension(path, newExtension);
+            if (!File.Exists(path))
+                throw new ErrorException { Error = ErrorException.ErrorType.WriteConflict };
             File.Move(path, newPath);
             File.SetLastWriteTime(newPath, lastWriteTime);
             return newPath;

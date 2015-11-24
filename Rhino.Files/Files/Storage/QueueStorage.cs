@@ -86,6 +86,7 @@ namespace Rhino.Files.Storage
                 using (var actions = new GlobalActions(_database, _instanceId, _configuration))
                     action(actions);
             }
+            //catch (Exception e) { Console.Write(e); }
             finally { if (primaryLock) _usageLock.ExitReadLock(); }
         }
 
@@ -102,7 +103,10 @@ namespace Rhino.Files.Storage
             finally { if (primaryLock) _usageLock.ExitReadLock(); }
         }
 
-        public Guid Id { get; private set; }
+        public Guid Id
+        {
+            get { return _instanceId; }
+        }
     }
 }
 

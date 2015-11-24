@@ -13,8 +13,8 @@ namespace Rhino.Files.Storage
         readonly Dictionary<string, QueueActions> _queuesByName = new Dictionary<string, QueueActions>();
         protected readonly string _database;
         protected readonly Guid _instanceId;
-        protected ResourceSession _session;
-        protected ResourceTransaction _transaction;
+        //protected ResourceSession _session;
+        //protected ResourceTransaction _transaction;
 
         public AbstractActions(string database, Guid instanceId)
         {
@@ -22,8 +22,8 @@ namespace Rhino.Files.Storage
             _instanceId = instanceId;
             try
             {
-                _session = new ResourceSession(instanceId);
-                _transaction = new ResourceTransaction(_session);
+                //_session = new ResourceSession(instanceId);
+                //_transaction = new ResourceTransaction(_session);
             }
             catch (Exception) { Dispose(); throw; }
         }
@@ -34,8 +34,8 @@ namespace Rhino.Files.Storage
             {
                 foreach (var action in _queuesByName.Values)
                     action.Dispose();
-                if (_transaction != null)
-                    _transaction.Dispose();
+                //if (_transaction != null)
+                //    _transaction.Dispose();
             }
             catch (Exception e) { Trace.WriteLine(e.ToString()); Debugger.Break(); }
         }
@@ -73,7 +73,7 @@ namespace Rhino.Files.Storage
 
         public void Commit()
         {
-            _transaction.Commit();
+            //_transaction.Commit();
         }
     }
 }
