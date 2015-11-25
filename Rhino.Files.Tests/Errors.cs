@@ -18,6 +18,7 @@ namespace Rhino.Files.Tests
             _sender = new QueueManager("localhost", "test.esent");
             _sender.Start();
         }
+
         [Fact]
         public void Will_get_notified_when_failed_to_send_to_endpoint()
         {
@@ -30,31 +31,31 @@ namespace Rhino.Files.Tests
             };
             using (var tx = new TransactionScope())
             {
-                _sender.Send(new Uri("file://255.255.255.255/hello/world"), new MessagePayload
+                _sender.Send(new Uri("file://_error/hello/world"), new MessagePayload
                 {
                     Data = new byte[] { 1 }
                 });
                 tx.Complete();
             }
             wait.WaitOne();
-            Assert.Equal("255.255.255.255", endPointWeFailedToSendTo);
+            Assert.Equal("_error", endPointWeFailedToSendTo);
         }
 
         [Fact]
         public void Will_not_exceed_sending_thresholds()
         {
             var wait = new ManualResetEvent(false);
-            int maxNumberOfConnecting = 0;
+            var maxNumberOfConnecting = 0;
             _sender.FailedToSendMessagesTo += endpoint =>
             {
                 maxNumberOfConnecting = Math.Max(maxNumberOfConnecting, _sender.CurrentlyConnectingCount);
-                if (endpoint.Equals("foo50"))
+                if (endpoint.Equals("_foo50"))
                     wait.Set();
             };
             using (var tx = new TransactionScope())
             {
-                for (int i = 0; i < 200; ++i)
-                    _sender.Send(new Uri(string.Format("file://foo{0}/hello/world", i)), new MessagePayload
+                for (var i = 0; i < 200; ++i)
+                    _sender.Send(new Uri(string.Format("file://_foo{0}/hello/world", i)), new MessagePayload
                     {
                         Data = new byte[] { 1 }
                     });

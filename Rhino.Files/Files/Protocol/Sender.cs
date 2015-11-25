@@ -4,6 +4,7 @@ using Rhino.Files.Storage;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Wintellect.Threading.AsyncProgModel;
 
 namespace Rhino.Files.Protocol
@@ -49,7 +50,7 @@ namespace Rhino.Files.Protocol
             try
             {
                 //try { if (!Directory.Exists(destination)) throw new InvalidOperationException(string.Format("Destination {0} does not exist", destination)); }
-                try { if (!Directory.Exists(destination)) Directory.CreateDirectory(destination); }
+                try { FileUtil.EnsureQueuePath(destination); }
                 catch (Exception e) { _logger.WarnFormat("Failed to connect to {0} because {1}", Destination, e); FailureToConnect(e); yield break; }
 
                 try { Connected(); }

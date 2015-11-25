@@ -2,12 +2,15 @@
 using Rhino.Files.Model;
 using System;
 using System.IO;
+using System.Threading;
 
 namespace Rhino.Files.Storage
 {
     internal static class FileUtil
     {
         static readonly DateTime _fileSystemSafeDate = new DateTime(1900, 1, 1);
+        static long _ticksSeed = DateTime.Now.Ticks;
+        static volatile int _ticksInc;
 
         public static MessageId ToMessageId(string path, bool hasTime = true)
         {
@@ -34,7 +37,8 @@ namespace Rhino.Files.Storage
 
         public static string FromMessageId(MessageId id, string extension, bool hasTime = true)
         {
-            return (hasTime ? DateTime.Now.Ticks.ToString("X16") + "_" : string.Empty) + (id.SourceInstanceId == Guid.Empty ? string.Empty : id.SourceInstanceId + "_") + id.MessageIdentifier + (extension != null ? "." + extension : string.Empty);
+            var ticks = _ticksSeed + Interlocked.Increment(ref _ticksInc);
+            return (hasTime ? ticks.ToString("X16") + "_" : string.Empty) + (id.SourceInstanceId == Guid.Empty ? string.Empty : id.SourceInstanceId + "_") + id.MessageIdentifier + (extension != null ? "." + extension : string.Empty);
         }
 
         public static string FromTransactionId(Guid id, string extension)
@@ -95,6 +99,20 @@ namespace Rhino.Files.Storage
         internal static void SetLastWriteTime(string path, DateTime time)
         {
             File.SetLastWriteTime(path, (time != DateTime.MinValue ? time : _fileSystemSafeDate));
+        }
+
+        internal static void EnsureQueuePath(string path)
+        {
+            var name = Path.GetFileName(path);
+            if (name[0] != '_')
+            {
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+                return;
+            }
+            if (name.StartsWith("_wait"))
+                Thread.Sleep(5000);
+            throw new Exception(name);
         }
     }
 }
