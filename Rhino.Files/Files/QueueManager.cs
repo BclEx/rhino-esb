@@ -125,8 +125,11 @@ namespace Rhino.Files
             AssertNotDisposedOrDisposing();
             if (_wasStarted)
                 throw new InvalidOperationException("The Start method may not be invoked more than once.");
-            _receiver = new Receiver(_endpoint, AcceptMessages);
-            _receiver.Start();
+            if (_endpoint != null)
+            {
+                _receiver = new Receiver(_endpoint, AcceptMessages);
+                _receiver.Start();
+            }
             _queuedMessagesSender = new QueuedMessagesSender(_queueStorage, this);
             _sendingThread = new Thread(_queuedMessagesSender.Send)
             {
@@ -334,7 +337,8 @@ namespace Rhino.Files
                 _purgeOldDataTimer.Dispose();
                 _queuedMessagesSender.Stop();
                 _sendingThread.Join();
-                _receiver.Dispose();
+                if (_receiver != null)
+                    _receiver.Dispose();
             }
             while (_currentlyInCriticalReceiveStatus > 0)
             {

@@ -1,35 +1,33 @@
-using System;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Threading;
-using System.Transactions;
 using Rhino.Files.Model;
 using Rhino.Files.Protocol;
 using Rhino.Files.Tests.Protocol;
+using System;
+using System.IO;
+using System.Text;
+using System.Threading;
+using System.Transactions;
 using Xunit;
 
 namespace Rhino.Files.Tests
 {
     public class ReceivingFromRhinoQueue : WithDebugging, IDisposable
     {
-        private readonly QueueManager queueManager;
+        readonly QueueManager _queueManager;
 
         public ReceivingFromRhinoQueue()
         {
             if (Directory.Exists("test.esent"))
                 Directory.Delete("test.esent", true);
-
-            queueManager = new QueueManager("localhost", "test.esent");
-            queueManager.CreateQueues("h");
-            queueManager.Start();
+            _queueManager = new QueueManager("localhost", "test.esent");
+            _queueManager.CreateQueues("h");
+            _queueManager.Start();
         }
 
         #region IDisposable Members
 
         public void Dispose()
         {
-            queueManager.Dispose();
+            _queueManager.Dispose();
         }
 
         #endregion
@@ -56,16 +54,14 @@ namespace Rhino.Files.Tests
 
             using (var tx = new TransactionScope())
             {
-                var message = queueManager.Receive("h", null);
+                var message = _queueManager.Receive("h", null);
                 Assert.Equal("hello", Encoding.Unicode.GetString(message.Data));
-
                 tx.Complete();
             }
 
             using (var tx = new TransactionScope())
             {
-                Assert.Throws<TimeoutException>(() => queueManager.Receive("h", null, TimeSpan.Zero));
-
+                Assert.Throws<TimeoutException>(() => _queueManager.Receive("h", null, TimeSpan.Zero));
                 tx.Complete();
             }
         }
@@ -80,7 +76,7 @@ namespace Rhino.Files.Tests
                 Data = Encoding.Unicode.GetBytes("hello"),
                 SentAt = DateTime.Now
             };
-            for (int i = 0; i < 2; i++)
+            for (var i = 0; i < 2; i++)
             {
                 var wait = new ManualResetEvent(false);
                 var sender = new Sender
@@ -88,7 +84,7 @@ namespace Rhino.Files.Tests
                     Destination = "localhost",
                     Failure = exception => Assert.False(true),
                     Success = () => null,
-                    Messages = new[] { msg, },
+                    Messages = new[] { msg },
                 };
                 sender.SendCompleted += () => wait.Set();
                 sender.Send();
@@ -97,16 +93,14 @@ namespace Rhino.Files.Tests
 
             using (var tx = new TransactionScope())
             {
-                var message = queueManager.Receive("h", null);
+                var message = _queueManager.Receive("h", null);
                 Assert.Equal("hello", Encoding.Unicode.GetString(message.Data));
-
                 tx.Complete();
             }
 
             using (var tx = new TransactionScope())
             {
-                Assert.Throws<TimeoutException>(() => queueManager.Receive("h", null, TimeSpan.Zero));
-
+                Assert.Throws<TimeoutException>(() => _queueManager.Receive("h", null, TimeSpan.Zero));
                 tx.Complete();
             }
         }
@@ -116,7 +110,6 @@ namespace Rhino.Files.Tests
         {
             new Sender
             {
-
                 Destination = "localhost",
                 Failure = exception => Assert.False(true),
                 Success = () => null,
@@ -134,13 +127,13 @@ namespace Rhino.Files.Tests
 
             using (new TransactionScope())
             {
-                var message = queueManager.Receive("h", null);
+                var message = _queueManager.Receive("h", null);
                 Assert.Equal("hello", Encoding.Unicode.GetString(message.Data));
             }
 
             using (new TransactionScope())
             {
-                var message = queueManager.Receive("h", null);
+                var message = _queueManager.Receive("h", null);
                 Assert.Equal("hello", Encoding.Unicode.GetString(message.Data));
             }
         }
@@ -167,15 +160,13 @@ namespace Rhino.Files.Tests
 
             using (var tx = new TransactionScope())
             {
-                var message = queueManager.Receive("h", null);
+                var message = _queueManager.Receive("h", null);
                 Assert.Equal("hello", Encoding.Unicode.GetString(message.Data));
-
                 tx.Complete();
             }
-
             Thread.Sleep(500);
 
-            var messages = queueManager.GetAllProcessedMessages("h");
+            var messages = _queueManager.GetAllProcessedMessages("h");
             Assert.Equal(1, messages.Length);
             Assert.Equal("hello", Encoding.Unicode.GetString(messages[0].Data));
         }
@@ -203,10 +194,10 @@ namespace Rhino.Files.Tests
             using (new TransactionScope())
             {
                 // force a wait until we receive the message
-                queueManager.Receive("h", null);
+                _queueManager.Receive("h", null);
             }
 
-            var messages = queueManager.GetAllMessages("h", null);
+            var messages = _queueManager.GetAllMessages("h", null);
             Assert.Equal(1, messages.Length);
             Assert.Equal("hello", Encoding.Unicode.GetString(messages[0].Data));
         }

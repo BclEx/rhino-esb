@@ -47,17 +47,18 @@ namespace Rhino.FileWatch
         {
             if (!Active)
                 throw new InvalidOperationException("mustlisten");
-            foreach (var r in _tcs.Task.Result)
-                switch (r.Error)
-                {
-                    case FileWatcherError.Success:
-                        asyncResult.Result = r;
-                        asyncResult.InvokeCallback();
-                        break;
-                    default:
-                        //asyncResult.ErrorCode = (int)r.Error;
-                        throw new FileWatcherException(r.Error);
-                }
+            using (var tx = new TransactionScope(TransactionScopeOption.Suppress))
+                foreach (var r in _tcs.Task.Result)
+                    switch (r.Error)
+                    {
+                        case FileWatcherError.Success:
+                            asyncResult.Result = r;
+                            asyncResult.InvokeCallback();
+                            break;
+                        default:
+                            //asyncResult.ErrorCode = (int)r.Error;
+                            throw new FileWatcherException(r.Error);
+                    }
             //var success = FileWatcherError.Success;
             //IEnumerable<FileWatcherFile> result;
             //lock (this)

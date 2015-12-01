@@ -17,12 +17,12 @@ namespace Rhino.Files.Tests
                 Directory.Delete("test.esent", true);
             if (Directory.Exists("test2.esent"))
                 Directory.Delete("test2.esent", true);
-            _sender = new QueueManager("localhost", "test.esent");
+            _sender = new QueueManager(null, "test.esent");
             _sender.Start();
             using (var tx = new TransactionScope())
             {
                 _sender.Send(
-                    new Uri("files://localhost/h"),
+                    new Uri("file://localhost/h"),
                     new MessagePayload
                     {
                         Data = new byte[] { 6, 7, 8, 9 }
@@ -42,7 +42,7 @@ namespace Rhino.Files.Tests
             _sender.Dispose();
             _receiver.Dispose();
 
-            _sender = new QueueManager("localhost", "test.esent");
+            _sender = new QueueManager(null, "test.esent");
             _receiver = new QueueManager("localhost", "test2.esent");
             _receiver.CreateQueues("h", "a");
         }
@@ -53,7 +53,7 @@ namespace Rhino.Files.Tests
                 Directory.Delete("test.esent", true);
             if (Directory.Exists("test2.esent"))
                 Directory.Delete("test2.esent", true);
-            _sender = new QueueManager("localhost", "test.esent");
+            _sender = new QueueManager(null, "test.esent");
             _receiver = new QueueManager("localhost", "test2.esent");
             _receiver.CreateQueues("h", "a");
         }

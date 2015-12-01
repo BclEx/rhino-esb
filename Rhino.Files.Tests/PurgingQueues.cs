@@ -9,19 +9,18 @@ namespace Rhino.Files.Tests
 {
     public class PurgingQueues
     {
-        private const string EsentFileName = "test.esent";
-        private QueueManager _queueManager;
+        QueueManager _queueManager;
 
         public PurgingQueues()
         {
-            if (Directory.Exists(EsentFileName))
-                Directory.Delete(EsentFileName, true);
+            if (Directory.Exists("test.esent"))
+                Directory.Delete("test.esent", true);
         }
 
         [Fact(Skip = "This is a slow load test")]
         public void CanPurgeLargeSetsOfOldData()
         {
-            _queueManager = new QueueManager("localhost", EsentFileName);
+            _queueManager = new QueueManager("localhost", "test.esent");
             _queueManager.Configuration.OldestMessageInOutgoingHistory = TimeSpan.Zero;
             _queueManager.Start();
 

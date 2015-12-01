@@ -15,7 +15,6 @@ namespace Rhino.Files.Storage
         readonly QueueManagerConfiguration _configuration;
         readonly ILog _logger;
         readonly string _txsPath;
-        readonly string _queuesPath;
         readonly string _recoveryPath;
         readonly string _outgoingPath;
         readonly string _receivedPath;
@@ -28,7 +27,6 @@ namespace Rhino.Files.Storage
             _logger = LogManager.GetLogger(typeof(GlobalActions));
             _configuration = configuration;
             _txsPath = Path.Combine(database, ".txs");
-            _queuesPath = Path.Combine(database, ".queues");
             _recoveryPath = Path.Combine(database, ".recovery");
             _outgoingPath = Path.Combine(database, ".outgoing");
             _receivedPath = Path.Combine(database, ".received");
@@ -275,9 +273,9 @@ namespace Rhino.Files.Storage
 
         public string[] GetAllQueuesNames()
         {
-            if (!Directory.Exists(_queuesPath))
+            if (!Directory.Exists(_database))
                 return new string[] { };
-            return Directory.EnumerateFiles(_queuesPath).OrderBy(x => x)
+            return Directory.EnumerateDirectories(_database).Where(x => x[0] != '.')
                 .ToArray();
         }
 

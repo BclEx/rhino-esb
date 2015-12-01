@@ -50,6 +50,8 @@ namespace Rhino.Files.Storage
                 _subqueues = _subqueues.Union(new[] { message.SubQueue }).ToArray();
             }
             var path = (string.IsNullOrEmpty(message.SubQueue) ? _msgsPath : Path.Combine(_msgsPath, message.SubQueue));
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
 
             var messageStatus = MessageStatus.InTransit;
             var persistentMessage = (message as PersistentMessage);
@@ -200,7 +202,8 @@ namespace Rhino.Files.Storage
             var id = FileUtil.ToMessageId(path);
             if (!File.Exists(path))
                 return null;
-            var newPath = FileUtil.MoveBase(path, _msgsPath, _msgsPath + subQueue, MessageStatus.SubqueueChanged.ToString());
+            var msgPath = Path.Combine(_msgsPath, subQueue);
+            var newPath = FileUtil.MoveBase(path, _msgsPath, msgPath, MessageStatus.SubqueueChanged.ToString());
             var bookmark = new MessageBookmark { Bookmark = newPath, QueueName = _queueName };
             _logger.DebugFormat("Moving message {0} to subqueue {1}", id, _queueName);
             return bookmark;

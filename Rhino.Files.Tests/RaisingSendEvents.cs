@@ -1,39 +1,33 @@
-﻿using System;
-using System.IO;
-using System.Net;
-using System.Threading;
-using System.Transactions;
-using Rhino.Files.Model;
+﻿using Rhino.Files.Model;
 using Rhino.Files.Protocol;
 using Rhino.Files.Tests.Protocol;
+using System;
+using System.IO;
+using System.Threading;
+using System.Transactions;
 using Xunit;
 
 namespace Rhino.Files.Tests
 {
     public class RaisingSendEvents : WithDebugging
     {
-        private const string TEST_QUEUE_1 = "testA.esent";
-        private const string TEST_QUEUE_2 = "testB.esent";
-
-        private MessageEventArgs messageEventArgs;
+        MessageEventArgs _messageEventArgs;
 
         public QueueManager SetupSender()
         {
-            if (Directory.Exists(TEST_QUEUE_1))
-                Directory.Delete(TEST_QUEUE_1, true);
-
-            if (Directory.Exists(TEST_QUEUE_2))
-                Directory.Delete(TEST_QUEUE_2, true);
-
-            var sender = new QueueManager("localhost", TEST_QUEUE_1);
+            if (Directory.Exists("test.esent"))
+                Directory.Delete("test.esent", true);
+            if (Directory.Exists("test2.esent"))
+                Directory.Delete("test2.esent", true);
+            var sender = new QueueManager(null, "test.esent");
             sender.Start();
-            messageEventArgs = null;
+            _messageEventArgs = null;
             return sender;
         }
 
         void RecordMessageEvent(object s, MessageEventArgs e)
         {
-            messageEventArgs = e;
+            _messageEventArgs = e;
         }
 
         [Fact]
@@ -47,20 +41,19 @@ namespace Rhino.Files.Tests
                 {
                     sender.Send(
                         new Uri("file://localhost/h"),
-                         new MessagePayload
-                         {
-                             Data = new byte[] { 1, 2, 4, 5 }
-                         });
-
+                        new MessagePayload
+                        {
+                            Data = new byte[] { 1, 2, 4, 5 }
+                        });
                     tx.Complete();
                 }
 
                 sender.MessageQueuedForSend -= RecordMessageEvent;
             }
 
-            Assert.NotNull(messageEventArgs);
-            Assert.Equal("localhost", messageEventArgs.Endpoint);
-            Assert.Equal("h", messageEventArgs.Message.Queue);
+            Assert.NotNull(_messageEventArgs);
+            Assert.Equal("localhost", _messageEventArgs.Endpoint);
+            Assert.Equal("h", _messageEventArgs.Message.Queue);
         }
 
         [Fact]
@@ -73,20 +66,19 @@ namespace Rhino.Files.Tests
                 using (new TransactionScope())
                 {
                     sender.Send(
-                        new Uri("file://localhost/h"),
+                        new Uri("file://_error/h"),
                         new MessagePayload
                         {
                             Data = new byte[] { 1, 2, 4, 5 }
                         });
-
                 }
 
                 sender.MessageQueuedForSend -= RecordMessageEvent;
             }
 
-            Assert.NotNull(messageEventArgs);
-            Assert.Equal("localhost", messageEventArgs.Endpoint);
-            Assert.Equal("h", messageEventArgs.Message.Queue);
+            Assert.NotNull(_messageEventArgs);
+            Assert.Equal("_error", _messageEventArgs.Endpoint);
+            Assert.Equal("h", _messageEventArgs.Message.Queue);
         }
 
         [Fact]
@@ -96,7 +88,7 @@ namespace Rhino.Files.Tests
             {
                 sender.MessageSent += RecordMessageEvent;
 
-                using (var receiver = new QueueManager("localhost", TEST_QUEUE_2))
+                using (var receiver = new QueueManager("localhost", "test2.esent"))
                 {
                     receiver.CreateQueues("h");
                     receiver.Start();
@@ -106,10 +98,9 @@ namespace Rhino.Files.Tests
                         sender.Send(
                             new Uri("file://localhost/h"),
                             new MessagePayload
-                                {
-                                    Data = new byte[] { 1, 2, 4, 5 }
-                                });
-
+                            {
+                                Data = new byte[] { 1, 2, 4, 5 }
+                            });
                         tx.Complete();
                     }
                     sender.WaitForAllMessagesToBeSent();
@@ -118,9 +109,9 @@ namespace Rhino.Files.Tests
                 sender.MessageSent -= RecordMessageEvent;
             }
 
-            Assert.NotNull(messageEventArgs);
-            Assert.Equal("localhost", messageEventArgs.Endpoint);
-            Assert.Equal("h", messageEventArgs.Message.Queue);
+            Assert.NotNull(_messageEventArgs);
+            Assert.Equal("localhost", _messageEventArgs.Endpoint);
+            Assert.Equal("h", _messageEventArgs.Message.Queue);
         }
 
         [Fact]
@@ -128,18 +119,16 @@ namespace Rhino.Files.Tests
         {
             using (var sender = SetupSender())
             {
-
                 sender.MessageSent += RecordMessageEvent;
 
                 using (var tx = new TransactionScope())
                 {
                     sender.Send(
-                        new Uri("file://localhost/h"),
+                        new Uri("file://_error/h"),
                         new MessagePayload
-                            {
-                                Data = new byte[] { 1, 2, 4, 5 }
-                            });
-
+                        {
+                            Data = new byte[] { 1, 2, 4, 5 }
+                        });
                     tx.Complete();
                 }
                 Thread.Sleep(1000);
@@ -147,7 +136,7 @@ namespace Rhino.Files.Tests
                 sender.MessageSent -= RecordMessageEvent;
             }
 
-            Assert.Null(messageEventArgs);
+            Assert.Null(_messageEventArgs);
         }
 
         [Fact]
@@ -157,7 +146,7 @@ namespace Rhino.Files.Tests
             {
                 sender.MessageSent += RecordMessageEvent;
 
-                using (var receiver = new RevertingQueueManager("localhost", TEST_QUEUE_2))
+                using (var receiver = new RevertingQueueManager("localhost", "test2.esent"))
                 {
                     receiver.CreateQueues("h");
                     receiver.Start();
@@ -167,10 +156,9 @@ namespace Rhino.Files.Tests
                         sender.Send(
                             new Uri("file://localhost/h"),
                             new MessagePayload
-                                {
-                                    Data = new byte[] { 1, 2, 4, 5 }
-                                });
-
+                            {
+                                Data = new byte[] { 1, 2, 4, 5 }
+                            });
                         tx.Complete();
                     }
                     Thread.Sleep(1000);
@@ -179,15 +167,13 @@ namespace Rhino.Files.Tests
                 }
             }
 
-            Assert.Null(messageEventArgs);
+            Assert.Null(_messageEventArgs);
         }
 
         private class RevertingQueueManager : QueueManager
         {
             public RevertingQueueManager(string endpoint, string path)
-                : base(endpoint, path)
-            {
-            }
+                : base(endpoint, path) { }
 
             protected override IMessageAcceptance AcceptMessages(Message[] msgs)
             {

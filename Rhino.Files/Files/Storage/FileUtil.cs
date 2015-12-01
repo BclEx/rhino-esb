@@ -67,6 +67,9 @@ namespace Rhino.Files.Storage
             var newPath = Path.Combine(newBase, path.Substring(oldBase.Length + 1));
             if (newExtension != null)
                 newPath = NewExtension(newPath, newExtension);
+            var newPathDirectory = Path.GetDirectoryName(newPath);
+            if (!Directory.Exists(newPathDirectory))
+                Directory.CreateDirectory(newPathDirectory);
             File.Move(path, newPath);
             return newPath;
         }

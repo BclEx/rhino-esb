@@ -15,7 +15,7 @@ namespace Rhino.Files.Tests
             if (Directory.Exists("test.esent"))
                 Directory.Delete("test.esent", true);
 
-            _sender = new QueueManager("localhost", "test.esent");
+            _sender = new QueueManager(null, "test.esent");
             _sender.Start();
         }
 

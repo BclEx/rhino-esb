@@ -1,5 +1,6 @@
 ﻿using Common.Logging;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.ConstrainedExecution;
 using System.Threading;
@@ -35,10 +36,7 @@ namespace Rhino.Files.Storage
             try
             {
                 _log.Debug("Disposing queue storage");
-                try
-                {
-                    GC.SuppressFinalize(this);
-                }
+                try { GC.SuppressFinalize(this); }
                 catch (Exception e) { _log.Error("Could not dispose of queue storage properly", e); throw; }
             }
             finally { _usageLock.ExitWriteLock(); }
@@ -50,10 +48,7 @@ namespace Rhino.Files.Storage
             try
             {
                 _log.Debug("Rudely disposing queue storage");
-                try
-                {
-                    GC.SuppressFinalize(this);
-                }
+                try { GC.SuppressFinalize(this); }
                 catch (Exception e) { _log.Error("Could not dispose of queue storage properly", e); throw; }
             }
             finally { _usageLock.ExitWriteLock(); }
@@ -86,7 +81,7 @@ namespace Rhino.Files.Storage
                 using (var actions = new GlobalActions(_database, _instanceId, _configuration))
                     action(actions);
             }
-            //catch (Exception e) { Console.Write(e); }
+            catch (Exception e) { Console.Write(e); Debugger.Break(); }
             finally { if (primaryLock) _usageLock.ExitReadLock(); }
         }
 
@@ -100,6 +95,7 @@ namespace Rhino.Files.Storage
                 using (var actions = new SenderActions(_database, _instanceId, _configuration))
                     action(actions);
             }
+            catch (Exception e) { Console.Write(e); Debugger.Break(); }
             finally { if (primaryLock) _usageLock.ExitReadLock(); }
         }
 
